@@ -16,7 +16,6 @@ A structured, responsive editorial web publication following the standard websit
 - **Hero Value Proposition**: Bold headline, mission statement, and high-contrast call-to-actions:
   - `Start Writing — It's Free` ➔ routes to registration
   - `Explore Stories` ➔ smooth scrolls to the curated dispatches feed
-- **Social Proof & Metrics Bar**: 500K+ readers, 12,000+ essays, 94% read completion.
 - **Core Platform Pillars (`#features`)**: Editorial typography, Markdown studio, and community discourse.
 - **Curated Articles Feed (`#stories`)**: Topic filters (*Engineering, Design, AI, Culture*), Grid/List view switcher, and in-place distraction-free reading overlay.
 - **Visitor Navigation**: Prominent **"Log In"** and **"Get Started"** buttons.
