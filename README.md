@@ -9,7 +9,7 @@ A structured, responsive editorial web publication following the standard websit
 
 ---
 
-## 🧭 The 4-Step Website Architecture
+##  The 4-Step Website Architecture
 
 ### 1. The Landing Page (`index.html`)
 - **Public Visitor First**: Visitors arrive at a modern landing page introducing the publication with zero pre-filled demo accounts.
@@ -43,9 +43,9 @@ A structured, responsive editorial web publication following the standard websit
 
 ---
 
-## 🖥️ Quick Page Links
+##  Quick Page Links
 
-- 🏠 [**Landing Page (`index.html`)**](file:///c:/Users/Administrator/Blog%20App/index.html)
-- 🔐 [**Log In & Register (`login.html`)**](file:///c:/Users/Administrator/Blog%20App/login.html)
-- 📊 [**Author Dashboard (`dashboard.html`)**](file:///c:/Users/Administrator/Blog%20App/dashboard.html)
-- ✍️ [**Create Blog (`create-blog.html`)**](file:///c:/Users/Administrator/Blog%20App/create-blog.html)
+-  [**Landing Page (`index.html`)**](file:///c:/Users/Administrator/Blog%20App/index.html)
+-  [**Log In & Register (`login.html`)**](file:///c:/Users/Administrator/Blog%20App/login.html)
+-  [**Author Dashboard (`dashboard.html`)**](file:///c:/Users/Administrator/Blog%20App/dashboard.html)
+-  [**Create Blog (`create-blog.html`)**](file:///c:/Users/Administrator/Blog%20App/create-blog.html)
