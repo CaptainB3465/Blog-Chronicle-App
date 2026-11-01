@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Access — Chronicle</title>
+  <meta name="description" content="Sign in or register for your Chronicle account to manage dispatches, curate your reading list, and participate in technical discourse.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#c95123',
+              600: '#b3441a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-[var(--bg-primary)] text-[var(--text-primary)]">
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Header -->
+  <header class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 group">
+      <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#c95123] to-[#f59e0b] flex items-center justify-center text-white shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
+        <i data-lucide="feather" class="w-5 h-5"></i>
+      </span>
+      <span class="text-xl font-extrabold tracking-tight font-serif-reading">CHRONICLE</span>
+    </a>
+
+    <div class="flex items-center gap-3">
+      <button data-theme-toggle aria-label="Toggle theme" class="p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors">
+        <i data-lucide="moon" data-theme-icon class="w-5 h-5"></i>
+      </button>
+      <a href="index.html" class="text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1">
+        <span>Back to Landing</span>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Auth Card Wrap -->
+  <main class="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+    <div class="w-full max-w-md">
+      
+      <!-- Card Container -->
+      <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 sm:p-8 shadow-xl">
+        
+        <!-- Tab Switcher (Log In vs Register) -->
+        <div class="flex items-center bg-[var(--bg-subtle)] p-1 rounded-2xl mb-6 border border-[var(--border-subtle)]">
+          <button id="tabLoginBtn" type="button" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs">
+            Log In
+          </button>
+          <button id="tabRegisterBtn" type="button" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+            Create Account
+          </button>
+        </div>
+
+        <!-- ==========================================
+             1. LOG IN FORM
+             ========================================== -->
+        <div id="loginSection">
+          <div class="text-center mb-6">
+            <h1 class="text-2xl font-extrabold font-serif-reading tracking-tight text-[var(--text-primary)]">
+              Welcome Back
+            </h1>
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              Enter your credentials to access your author dashboard.
+            </p>
+          </div>
+
+          <form id="loginForm" class="space-y-4">
+            <div>
+              <label for="loginEmail" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Email Address</label>
+              <div class="relative">
+                <input type="email" id="loginEmail" required placeholder="name@company.com" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors">
+                <i data-lucide="mail" class="w-4 h-4 absolute left-3.5 top-3 text-[var(--text-muted)]"></i>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="loginPassword" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Password</label>
+                <button type="button" id="forgotBtn" class="text-xs text-[var(--accent-primary)] hover:underline">Forgot password?</button>
+              </div>
+              <div class="relative">
+                <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors">
+                <i data-lucide="key-round" class="w-4 h-4 absolute left-3.5 top-3 text-[var(--text-muted)]"></i>
+                <button type="button" id="toggleLoginPassword" class="absolute right-3.5 top-3 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                  <i data-lucide="eye" id="loginEyeIcon" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <label class="flex items-center gap-2 cursor-pointer text-xs text-[var(--text-secondary)]">
+                <input type="checkbox" id="loginRemember" checked class="rounded border-[var(--border-medium)] text-[var(--accent-primary)] focus:ring-0 w-4 h-4 accent-orange-600">
+                <span>Remember me on this browser</span>
+              </label>
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 mt-3">
+              <span>Sign In to Dashboard</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </form>
+
+          <div class="mt-6 pt-5 border-t border-[var(--border-subtle)] text-center">
+            <p class="text-xs text-[var(--text-muted)]">
+              Need a new author profile?
+              <button type="button" id="switchToRegLink" class="font-bold text-[var(--accent-primary)] hover:underline ml-1">Register here</button>
+            </p>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             2. REGISTER FORM
+             ========================================== -->
+        <div id="registerSection" class="hidden">
+          <div class="text-center mb-6">
+            <h1 class="text-2xl font-extrabold font-serif-reading tracking-tight text-[var(--text-primary)]">
+              Create Author Profile
+            </h1>
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              Join the guild to publish long-form stories and build your audience.
+            </p>
+          </div>
+
+          <form id="registerForm" class="space-y-4">
+            <div>
+              <label for="regName" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Full Name</label>
+              <div class="relative">
+                <input type="text" id="regName" required placeholder="e.g. Alex Morgan" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors">
+                <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-3 text-[var(--text-muted)]"></i>
+              </div>
+            </div>
+
+            <div>
+              <label for="regRole" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Primary Domain / Role</label>
+              <select id="regRole" class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors">
+                <option value="Staff Software Engineer">Staff Software Engineer</option>
+                <option value="Design Systems Architect">Design Systems Architect</option>
+                <option value="AI & ML Researcher">AI & ML Researcher</option>
+                <option value="Independent Founder">Independent Founder</option>
+                <option value="Product & UX Strategist">Product & UX Strategist</option>
+                <option value="Technical Writer">Technical Writer</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="regEmail" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Work / Primary Email</label>
+              <div class="relative">
+                <input type="email" id="regEmail" required placeholder="alex@company.com" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors">
+                <i data-lucide="mail" class="w-4 h-4 absolute left-3.5 top-3 text-[var(--text-muted)]"></i>
+              </div>
+            </div>
+
+            <div>
+              <label for="regPassword" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Choose Password</label>
+              <div class="relative">
+                <input type="password" id="regPassword" required minlength="8" placeholder="At least 8 characters" class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors">
+                <i data-lucide="key-round" class="w-4 h-4 absolute left-3.5 top-3 text-[var(--text-muted)]"></i>
+                <button type="button" id="toggleRegPassword" class="absolute right-3.5 top-3 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                  <i data-lucide="eye" id="regEyeIcon" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <!-- Password Strength Meter -->
+              <div class="mt-2 flex items-center gap-2">
+                <div class="h-1 flex-1 rounded-full bg-[var(--border-subtle)] overflow-hidden">
+                  <div id="regStrengthBar" class="h-full w-0 transition-all duration-300"></div>
+                </div>
+                <span id="regStrengthText" class="text-[10px] font-mono text-[var(--text-muted)]">Min 8 chars</span>
+              </div>
+            </div>
+
+            <div class="pt-1">
+              <label class="flex items-start gap-2.5 cursor-pointer text-xs text-[var(--text-secondary)]">
+                <input type="checkbox" id="regTerms" required class="mt-0.5 rounded border-[var(--border-medium)] text-[var(--accent-primary)] focus:ring-0 w-4 h-4 accent-orange-600">
+                <span class="leading-relaxed">
+                  I agree to the editorial standards and constructive discourse principles.
+                </span>
+              </label>
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 mt-3">
+              <span>Create Account & Go to Dashboard</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </form>
+
+          <div class="mt-6 pt-5 border-t border-[var(--border-subtle)] text-center">
+            <p class="text-xs text-[var(--text-muted)]">
+              Already have an account?
+              <button type="button" id="switchToLoginLink" class="font-bold text-[var(--accent-primary)] hover:underline ml-1">Sign in here</button>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Trust note -->
+      <div class="mt-6 text-center text-xs text-[var(--text-muted)] flex items-center justify-center gap-3">
+        <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Secure Session</span>
+        <span>•</span>
+        <span>Independent Publication</span>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-7xl mx-auto px-4 py-4 text-center text-xs text-[var(--text-muted)]">
+    © 2026 Chronicle Independent Publishing Inc.
+  </footer>
+
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) window.lucide.createIcons();
+
+      const tabLoginBtn = document.getElementById('tabLoginBtn');
+      const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+      const loginSection = document.getElementById('loginSection');
+      const registerSection = document.getElementById('registerSection');
+      const switchToRegLink = document.getElementById('switchToRegLink');
+      const switchToLoginLink = document.getElementById('switchToLoginLink');
+
+      // Forms & inputs
+      const loginForm = document.getElementById('loginForm');
+      const loginEmail = document.getElementById('loginEmail');
+      const loginPassword = document.getElementById('loginPassword');
+      const loginRemember = document.getElementById('loginRemember');
+
+      const registerForm = document.getElementById('registerForm');
+      const regName = document.getElementById('regName');
+      const regRole = document.getElementById('regRole');
+      const regEmail = document.getElementById('regEmail');
+      const regPassword = document.getElementById('regPassword');
+      const regStrengthBar = document.getElementById('regStrengthBar');
+      const regStrengthText = document.getElementById('regStrengthText');
+
+      // Password toggles
+      const toggleLoginPassword = document.getElementById('toggleLoginPassword');
+      const loginEyeIcon = document.getElementById('loginEyeIcon');
+      toggleLoginPassword.addEventListener('click', () => {
+        const isPass = loginPassword.type === 'password';
+        loginPassword.type = isPass ? 'text' : 'password';
+        loginEyeIcon.setAttribute('data-lucide', isPass ? 'eye-off' : 'eye');
+        if (window.lucide) window.lucide.createIcons();
+      });
+
+      const toggleRegPassword = document.getElementById('toggleRegPassword');
+      const regEyeIcon = document.getElementById('regEyeIcon');
+      toggleRegPassword.addEventListener('click', () => {
+        const isPass = regPassword.type === 'password';
+        regPassword.type = isPass ? 'text' : 'password';
+        regEyeIcon.setAttribute('data-lucide', isPass ? 'eye-off' : 'eye');
+        if (window.lucide) window.lucide.createIcons();
+      });
+
+      // Strength Meter
+      regPassword.addEventListener('input', () => {
+        const val = regPassword.value;
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        if (val.length === 0) {
+          regStrengthBar.style.width = '0%';
+          regStrengthText.textContent = 'Min 8 chars';
+        } else if (score <= 1) {
+          regStrengthBar.style.width = '30%';
+          regStrengthBar.className = 'h-full bg-rose-500 transition-all duration-300';
+          regStrengthText.textContent = 'Weak';
+          regStrengthText.className = 'text-[10px] font-mono text-rose-500';
+        } else if (score <= 2) {
+          regStrengthBar.style.width = '65%';
+          regStrengthBar.className = 'h-full bg-amber-500 transition-all duration-300';
+          regStrengthText.textContent = 'Fair';
+          regStrengthText.className = 'text-[10px] font-mono text-amber-500';
+        } else {
+          regStrengthBar.style.width = '100%';
+          regStrengthBar.className = 'h-full bg-emerald-500 transition-all duration-300';
+          regStrengthText.textContent = 'Strong';
+          regStrengthText.className = 'text-[10px] font-mono text-emerald-500 font-bold';
+        }
+      });
+
+      // Switch Tab Functions
+      function setTab(tab) {
+        if (tab === 'register') {
+          tabRegisterBtn.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs';
+          tabLoginBtn.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all text-[var(--text-muted)] hover:text-[var(--text-primary)]';
+          loginSection.classList.add('hidden');
+          registerSection.classList.remove('hidden');
+          regName.focus();
+        } else {
+          tabLoginBtn.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs';
+          tabRegisterBtn.className = 'flex-1 py-2 rounded-xl text-xs font-bold transition-all text-[var(--text-muted)] hover:text-[var(--text-primary)]';
+          registerSection.classList.add('hidden');
+          loginSection.classList.remove('hidden');
+          loginEmail.focus();
+        }
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      tabLoginBtn.addEventListener('click', () => setTab('login'));
+      tabRegisterBtn.addEventListener('click', () => setTab('register'));
+      if (switchToRegLink) switchToRegLink.addEventListener('click', () => setTab('register'));
+      if (switchToLoginLink) switchToLoginLink.addEventListener('click', () => setTab('login'));
+
+      // Check URL param ?tab=register
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') === 'register') {
+        setTab('register');
+      }
+
+      // Handle Log In submission
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = loginEmail.value.trim();
+        const pass = loginPassword.value.trim();
+        if (!email || !pass) return;
+
+        ChronicleAuth.login(email, pass, loginRemember.checked);
+        showToast('Authenticated! Opening Dashboard...', 'success');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 600);
+      });
+
+      // Handle Registration submission
+      registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = regName.value.trim();
+        const email = regEmail.value.trim();
+        const role = regRole.value;
+        const pass = regPassword.value.trim();
+
+        if (!name || !email || !pass) return;
+
+        ChronicleAuth.register(name, email, pass, role);
+        showToast(`Welcome, ${name.split(' ')[0]}! Heading to Dashboard...`, 'success');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 600);
+      });
+
+      // Forgot password trigger
+      document.getElementById('forgotBtn').addEventListener('click', () => {
+        const email = loginEmail.value.trim();
+        if (!email) {
+          showToast('Please type your email address first.', 'error');
+        } else {
+          showToast(`Password reset link sent to ${email}`, 'info');
+        }
+      });
+    });
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const color = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-[var(--text-primary)] text-[var(--bg-primary)]';
+      toast.className = `px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${color}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

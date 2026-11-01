@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Author Dashboard — Chronicle</title>
+  <meta name="description" content="Personal author dashboard to manage stories, review readership analytics, track drafts, and engage with community responses.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#c95123',
+              600: '#b3441a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)]">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-2.5 group">
+          <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#c95123] to-[#f59e0b] flex items-center justify-center text-white shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
+            <i data-lucide="feather" class="w-5 h-5"></i>
+          </span>
+          <div>
+            <span class="text-xl sm:text-2xl font-extrabold tracking-tight font-serif-reading">CHRONICLE</span>
+            <span class="hidden sm:inline-block text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 ml-1.5 rounded bg-[var(--accent-surface)] text-[var(--accent-primary)]">Dashboard</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Center Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-semibold text-[var(--text-secondary)]">
+        <a href="index.html#stories" class="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
+          <i data-lucide="newspaper" class="w-4 h-4"></i>
+          <span>Articles Feed</span>
+        </a>
+        <a href="dashboard.html" class="text-[var(--accent-primary)] font-bold flex items-center gap-1.5">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="create-blog.html" class="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
+          <i data-lucide="square-pen" class="w-4 h-4"></i>
+          <span>Create Story</span>
+        </a>
+      </nav>
+
+      <!-- Right Actions & User Slot -->
+      <div class="flex items-center gap-3">
+        <button data-theme-toggle aria-label="Toggle theme" class="p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors">
+          <i data-lucide="moon" data-theme-icon class="w-5 h-5"></i>
+        </button>
+
+        <a href="create-blog.html" class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Write Story</span>
+        </a>
+
+        <!-- Dynamic User Slot -->
+        <div class="chronicle-nav-user-slot"></div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Dashboard Content Wrap -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+    
+    <!-- AUTHOR PROFILE HEADER BANNER -->
+    <section class="p-6 sm:p-8 rounded-3xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-md mb-8">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        
+        <div class="flex items-center gap-4 sm:gap-6">
+          <div class="relative">
+            <img id="dashAvatar" src="https://ui-avatars.com/api/?name=Author&background=c95123&color=fff&size=128" alt="Author Avatar" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[var(--border-subtle)] shadow-md">
+            <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[var(--bg-surface)] flex items-center justify-center text-white text-[10px]">
+              <i data-lucide="check" class="w-3 h-3"></i>
+            </span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 id="dashName" class="text-xl sm:text-2xl font-extrabold font-serif-reading text-[var(--text-primary)]">Author Profile</h1>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold">Active Member</span>
+            </div>
+            <p id="dashRole" class="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">Contributing Author</p>
+            <p id="dashEmail" class="text-xs text-[var(--text-secondary)] mt-1 font-mono">author@example.com</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
+          <a href="create-blog.html" class="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2">
+            <i data-lucide="pen-tool" class="w-4 h-4"></i>
+            <span>Create New Blog</span>
+          </a>
+          <button type="button" data-auth-logout class="px-4 py-2.5 rounded-xl border border-[var(--border-medium)] hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-bold transition-colors cursor-pointer">
+            Log Out
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- METRICS & ANALYTICS OVERVIEW -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+      
+      <!-- Card 1: Stories Published -->
+      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+          <span>Published Dispatches</span>
+          <span class="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-950 text-[var(--accent-primary)]">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashPublishedCount">0</div>
+        <div class="mt-2 text-[11px] text-[var(--text-muted)]">
+          <span>Live on publication</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Claps Received -->
+      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+          <span>Appreciations & Claps</span>
+          <span class="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-500">
+            <i data-lucide="heart" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashTotalClaps">0</div>
+        <div class="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+          <i data-lucide="sparkles" class="w-3 h-3"></i>
+          <span>Reader engagement</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Saved Drafts -->
+      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+          <span>Unpublished Drafts</span>
+          <span class="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-600">
+            <i data-lucide="file-edit" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashDraftCount">0</div>
+        <div class="mt-2 text-[11px] text-[var(--text-muted)]">
+          <span>Auto-saved in studio</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Community Discourse -->
+      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+          <span>Reader Responses</span>
+          <span class="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashCommentsCount">0</div>
+        <div class="mt-2 text-[11px] text-[var(--text-muted)]">
+          <span>Community feedback</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CONTENT 2-COLUMN SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- LEFT 8 COLS: Stories Management Table / Feed -->
+      <div class="lg:col-span-8 space-y-6">
+        
+        <!-- Tabs Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+          <div class="flex items-center gap-3 text-xs font-bold">
+            <button id="tabPublishedBtn" class="dash-tab active px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)]">
+              My Published Dispatches (<span id="tabPublishedCount">0</span>)
+            </button>
+            <button id="tabDraftsBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+              Saved Drafts (<span id="tabDraftsBadge">0</span>)
+            </button>
+          </div>
+          <a href="create-blog.html" class="text-xs text-[var(--accent-primary)] font-bold hover:underline flex items-center gap-1">
+            <span>+ Write new</span>
+          </a>
+        </div>
+
+        <!-- Stories Container -->
+        <div id="authorStoriesList" class="space-y-4">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Drafts Container (Hidden by default) -->
+        <div id="authorDraftsList" class="hidden space-y-4">
+          <!-- Injected via JS -->
+        </div>
+
+      </div>
+
+      <!-- RIGHT 4 COLS: Quick Scratchpad & Tips -->
+      <aside class="lg:col-span-4 space-y-6">
+        
+        <!-- Quick Action Card -->
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-[#c95123] to-[#8e3412] text-white shadow-md">
+          <h3 class="font-bold text-base font-serif-reading mb-1">Ready to share an insight?</h3>
+          <p class="text-xs text-orange-100/90 leading-relaxed mb-4">
+            The Chronicle Studio offers distraction-free writing, Markdown tools, and live editorial preview.
+          </p>
+          <a href="create-blog.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-orange-950 font-bold text-xs uppercase tracking-wider hover:bg-orange-50 transition-colors">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Create New Post</span>
+          </a>
+        </div>
+
+        <!-- Quick Idea Scratchpad -->
+        <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <h3 class="font-bold text-xs uppercase tracking-wider text-[var(--text-primary)] mb-2">Quick Draft Scratchpad</h3>
+          <p class="text-xs text-[var(--text-muted)] mb-3">Jot down a fleeting thesis before you forget it.</p>
+          <textarea id="quickScratchpad" rows="4" placeholder="Type your idea or thesis here..." class="w-full p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] resize-none"></textarea>
+          <button id="saveScratchpadBtn" class="mt-3 w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors">
+            Save as Draft
+          </button>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-12 w-full border-t border-[var(--border-subtle)] py-6 bg-[var(--bg-surface)]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
+      <span>© 2026 Chronicle Independent Publishing Inc. Author Dashboard</span>
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="hover:underline">Landing Page</a>
+        <a href="create-blog.html" class="hover:underline">Create Blog</a>
+        <button type="button" data-auth-logout class="text-red-500 hover:underline cursor-pointer">Log Out</button>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) window.lucide.createIcons();
+
+      const user = ChronicleAuth.getUser();
+
+      // If no active session, guide them to login
+      if (!user) {
+        showToast('Please log in to access your author dashboard.', 'info');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 800);
+        return;
+      }
+
+      // Populate user info dynamically
+      document.getElementById('dashAvatar').src = user.avatar;
+      document.getElementById('dashName').textContent = user.name;
+      document.getElementById('dashRole').textContent = user.role;
+      document.getElementById('dashEmail').textContent = user.email;
+
+      // Load published articles (clean user data only)
+      let allArticles = [];
+      try {
+        const raw = localStorage.getItem('chronicle_articles_v2');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            allArticles = parsed.filter(a => !/^post-[1-7]$/.test(a.id) && a.author && a.author.name !== 'Dr. Elena Rostova');
+          }
+        }
+      } catch (e) {
+        allArticles = [];
+      }
+
+      // Filter articles created by this user
+      const displayArticles = allArticles.filter(a => a.author && a.author.name && a.author.name.toLowerCase() === user.name.toLowerCase());
+
+      // Update counters
+      const totalClaps = displayArticles.reduce((sum, a) => sum + (a.claps || 0), 0);
+      const totalComments = displayArticles.reduce((sum, a) => sum + ((a.comments || []).length), 0);
+
+      document.getElementById('dashPublishedCount').textContent = displayArticles.length;
+      document.getElementById('tabPublishedCount').textContent = displayArticles.length;
+      document.getElementById('dashTotalClaps').textContent = totalClaps.toLocaleString();
+      document.getElementById('dashCommentsCount').textContent = totalComments;
+
+      // Render published list
+      renderAuthorArticles(displayArticles);
+
+      // Render draft
+      renderDrafts();
+
+      // Tab handlers
+      const tabPublishedBtn = document.getElementById('tabPublishedBtn');
+      const tabDraftsBtn = document.getElementById('tabDraftsBtn');
+      const publishedList = document.getElementById('authorStoriesList');
+      const draftsList = document.getElementById('authorDraftsList');
+
+      tabPublishedBtn.addEventListener('click', () => {
+        tabPublishedBtn.className = 'dash-tab active px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)]';
+        tabDraftsBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]';
+        publishedList.classList.remove('hidden');
+        draftsList.classList.add('hidden');
+      });
+
+      tabDraftsBtn.addEventListener('click', () => {
+        tabDraftsBtn.className = 'dash-tab active px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)]';
+        tabPublishedBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]';
+        draftsList.classList.remove('hidden');
+        publishedList.classList.add('hidden');
+      });
+
+      // Quick scratchpad
+      const scratchpad = document.getElementById('quickScratchpad');
+      const saveScratchpadBtn = document.getElementById('saveScratchpadBtn');
+      saveScratchpadBtn.addEventListener('click', () => {
+        const text = scratchpad.value.trim();
+        if (!text) {
+          showToast('Please type an idea first.', 'error');
+          return;
+        }
+        localStorage.setItem('chronicle_active_draft', JSON.stringify({
+          title: text.slice(0, 50) + (text.length > 50 ? '...' : ''),
+          excerpt: text,
+          body: text,
+          category: 'Engineering',
+          savedAt: new Date().toLocaleTimeString()
+        }));
+        scratchpad.value = '';
+        renderDrafts();
+        showToast('Idea saved to drafts!', 'success');
+      });
+    });
+
+    function renderAuthorArticles(articles) {
+      const container = document.getElementById('authorStoriesList');
+      if (!container) return;
+
+      if (articles.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-2xl">
+            <p class="font-bold text-sm text-[var(--text-primary)]">No stories published yet.</p>
+            <p class="text-xs text-[var(--text-muted)] mt-1">Ready to publish your thoughts?</p>
+            <a href="create-blog.html" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-bold uppercase tracking-wider">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Create Your First Blog</span>
+            </a>
+          </div>
+        `;
+        if (window.lucide) window.lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = articles.map(art => `
+        <div class="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 group">
+          <div class="flex items-start gap-4">
+            <img src="${art.coverImage}" alt="${art.title}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0">
+            <div>
+              <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)] mb-1">
+                <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${art.category}</span>
+                <span>•</span>
+                <span>${art.publishedAt}</span>
+                <span>•</span>
+                <span>${art.readingTime} min read</span>
+              </div>
+              <h3 class="text-base font-bold font-serif-reading text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">
+                ${art.title}
+              </h3>
+              <p class="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">
+                ${art.excerpt}
+              </p>
+              
+              <div class="mt-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
+                <span class="flex items-center gap-1">
+                  <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500 fill-rose-500"></i>
+                  <span>${art.claps || 0} claps</span>
+                </span>
+                <span class="flex items-center gap-1">
+                  <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                  <span>${(art.comments || []).length} responses</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 self-end sm:self-center">
+            <a href="index.html" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="View in feed">
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+            </a>
+            <a href="create-blog.html" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Edit story">
+              <i data-lucide="pen-tool" class="w-4 h-4"></i>
+            </a>
+            <button onclick="deleteArticle('${art.id}')" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-rose-50 dark:hover:bg-rose-950/30 text-[var(--text-muted)] hover:text-rose-500 transition-colors" title="Delete dispatch">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderDrafts() {
+      const container = document.getElementById('authorDraftsList');
+      const badge = document.getElementById('tabDraftsBadge');
+      const dashBadge = document.getElementById('dashDraftCount');
+      if (!container) return;
+
+      const raw = localStorage.getItem('chronicle_active_draft');
+      if (!raw) {
+        if (badge) badge.textContent = '0';
+        if (dashBadge) dashBadge.textContent = '0';
+        container.innerHTML = `
+          <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-2xl">
+            <p class="font-bold text-sm text-[var(--text-primary)]">No drafts currently in scratchpad.</p>
+            <p class="text-xs text-[var(--text-muted)] mt-1">Start writing in the Studio to auto-save drafts.</p>
+            <a href="create-blog.html" class="mt-3 inline-block px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-semibold">Open Studio</a>
+          </div>
+        `;
+        return;
+      }
+
+      if (badge) badge.textContent = '1';
+      if (dashBadge) dashBadge.textContent = '1';
+
+      const draft = JSON.parse(raw);
+      container.innerHTML = `
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-500">Unpublished Draft</span>
+            <h4 class="text-base font-bold font-serif-reading text-[var(--text-primary)] mt-0.5">${draft.title || 'Untitled Draft'}</h4>
+            <p class="text-xs text-[var(--text-muted)] mt-1 line-clamp-1">${draft.excerpt || 'No summary entered yet'}</p>
+            <span class="text-[11px] text-[var(--text-muted)] mt-2 inline-block">Last edited at ${draft.savedAt || 'earlier today'}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="create-blog.html" class="px-3.5 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-semibold hover:bg-[var(--accent-primary-hover)]">
+              Continue Writing
+            </a>
+            <button onclick="discardDraft()" class="p-2 rounded-xl text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function discardDraft() {
+      localStorage.removeItem('chronicle_active_draft');
+      renderDrafts();
+      showToast('Draft discarded.', 'info');
+    }
+
+    function deleteArticle(id) {
+      if (!confirm('Are you sure you want to permanently delete this dispatch?')) return;
+
+      let articles = [];
+      try {
+        const raw = localStorage.getItem('chronicle_articles_v2');
+        articles = raw ? JSON.parse(raw) : [...INITIAL_ARTICLES];
+      } catch (e) {
+        articles = [...INITIAL_ARTICLES];
+      }
+
+      articles = articles.filter(a => a.id !== id);
+      localStorage.setItem('chronicle_articles_v2', JSON.stringify(articles));
+
+      renderAuthorArticles(articles);
+      document.getElementById('dashPublishedCount').textContent = articles.length;
+      document.getElementById('tabPublishedCount').textContent = articles.length;
+      showToast('Dispatch was deleted from your publication.', 'info');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const color = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-[var(--text-primary)] text-[var(--bg-primary)]';
+      toast.className = `px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${color}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

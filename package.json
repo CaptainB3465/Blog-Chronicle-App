@@ -1,0 +1,19 @@
+{
+  "name": "chronicle-blog-app",
+  "version": "1.0.0",
+  "description": "A responsive, modern editorial blog application interface",
+  "scripts": {
+    "start": "npx serve . -p 3000",
+    "dev": "npx serve . -p 3000"
+  },
+  "keywords": [
+    "blog",
+    "responsive",
+    "editorial",
+    "ui",
+    "tailwind",
+    "vanilla-js"
+  ],
+  "author": "Antigravity Pair Programmer",
+  "license": "MIT"
+}

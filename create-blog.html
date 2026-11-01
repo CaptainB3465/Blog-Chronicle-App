@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Dispatch Studio — Chronicle Publication</title>
+  <meta name="description" content="Compose and publish long-form essays, research dispatches, and engineering deep-dives with live editorial preview.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#c95123',
+              600: '#b3441a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)]">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Top Studio Navigation Bar -->
+  <header class="sticky top-0 z-40 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Left: Logo & Status -->
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="flex items-center gap-2 group">
+          <span class="w-8 h-8 rounded-lg bg-[var(--accent-primary)] flex items-center justify-center text-white shadow-xs">
+            <i data-lucide="feather" class="w-4 h-4"></i>
+          </span>
+          <span class="text-lg font-bold font-serif-reading hidden sm:inline">CHRONICLE</span>
+        </a>
+        <div class="h-4 w-px bg-[var(--border-subtle)]"></div>
+        <div class="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="autoSaveStatus">Draft saved locally</span>
+        </div>
+      </div>
+
+      <!-- Center: Stats / Mode Tabs -->
+      <div class="flex items-center bg-[var(--bg-subtle)] p-1 rounded-xl border border-[var(--border-subtle)] text-xs font-semibold">
+        <button id="modeWriteBtn" class="px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs transition-colors flex items-center gap-1.5">
+          <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-[var(--accent-primary)]"></i>
+          <span>Write</span>
+        </button>
+        <button id="modePreviewBtn" class="px-3.5 py-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+          <span>Preview</span>
+        </button>
+      </div>
+
+      <!-- Right: Action CTA -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Live word & read time counter -->
+        <div class="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)] font-mono">
+          <span id="statWordCount">0 words</span>
+          <span>•</span>
+          <span id="statReadTime">1 min read</span>
+        </div>
+
+        <button data-theme-toggle aria-label="Toggle theme" class="p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors">
+          <i data-lucide="moon" data-theme-icon class="w-4 h-4"></i>
+        </button>
+
+        <button id="saveDraftBtn" class="px-3 py-1.5 rounded-xl border border-[var(--border-medium)] hover:border-[var(--text-primary)] text-xs font-semibold text-[var(--text-secondary)] transition-colors">
+          Save Draft
+        </button>
+
+        <button id="publishBtn" class="px-4 py-1.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Publish</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Studio Canvas Wrap -->
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    
+    <!-- WRITE MODE CONTAINER -->
+    <div id="writeModeContainer" class="space-y-6">
+
+      <!-- Cover Image Picker -->
+      <div class="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Hero Cover Image</span>
+          <button type="button" id="shufflePresetBtn" class="text-xs text-[var(--accent-primary)] font-semibold hover:underline flex items-center gap-1">
+            <i data-lucide="sparkles" class="w-3 h-3"></i>
+            <span>Shuffle Preset</span>
+          </button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="url" id="postCoverInput" placeholder="Paste Unsplash or external image URL..." class="flex-1 px-3.5 py-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs outline-none focus:border-[var(--accent-primary)]">
+          <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar" id="presetPillsWrap">
+            <!-- Preset chips -->
+          </div>
+        </div>
+
+        <!-- Live Cover Thumbnail -->
+        <div id="coverPreviewWrap" class="relative w-full h-44 sm:h-56 rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
+          <img id="coverPreviewImg" src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80" alt="Cover Preview" class="w-full h-full object-cover">
+          <span class="absolute bottom-2 right-2 text-[10px] bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded">Cover Preview</span>
+        </div>
+      </div>
+
+      <!-- Metadata (Category & Tags) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+          <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Publication Channel</label>
+          <select id="postCategorySelect" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-semibold outline-none focus:border-[var(--accent-primary)] text-[var(--text-primary)]">
+            <option value="Engineering">Engineering</option>
+            <option value="Design & UX">Design & UX</option>
+            <option value="AI & Futures">AI & Futures</option>
+            <option value="Culture">Culture</option>
+            <option value="Founder Notes">Founder Notes</option>
+            <option value="Productivity">Productivity</option>
+          </select>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+          <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Article Tags</label>
+          <input type="text" id="postTagsInput" placeholder="Architecture, Edge, Latency (comma separated)" class="w-full px-3 py-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs outline-none focus:border-[var(--accent-primary)]">
+        </div>
+      </div>
+
+      <!-- Title & Excerpt -->
+      <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-4">
+        <div>
+          <input type="text" id="postTitleInput" placeholder="Article Title..." class="w-full text-2xl sm:text-4xl font-extrabold font-serif-reading bg-transparent border-0 outline-none placeholder:text-[var(--text-muted)] text-[var(--text-primary)] leading-tight">
+        </div>
+        <div class="border-t border-[var(--border-subtle)] pt-3">
+          <textarea id="postExcerptInput" rows="2" placeholder="Write a provocative, clear one-to-two sentence summary or teaser for your dispatch..." class="w-full text-sm bg-transparent border-0 outline-none text-[var(--text-secondary)] placeholder:text-[var(--text-muted)] resize-none"></textarea>
+        </div>
+      </div>
+
+      <!-- Formatting Toolbar -->
+      <div class="sticky top-20 z-20 p-2 rounded-xl bg-[var(--bg-surface)]/95 backdrop-blur-md border border-[var(--border-subtle)] shadow-md flex items-center gap-1 overflow-x-auto hide-scrollbar">
+        <button type="button" data-cmd="h2" title="Subheading (H2)" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-xs font-bold text-[var(--text-secondary)]">H2</button>
+        <button type="button" data-cmd="h3" title="Subheading (H3)" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-xs font-bold text-[var(--text-secondary)]">H3</button>
+        <div class="h-4 w-px bg-[var(--border-subtle)] mx-1"></div>
+        <button type="button" data-cmd="bold" title="Bold" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><i data-lucide="bold" class="w-4 h-4"></i></button>
+        <button type="button" data-cmd="italic" title="Italic" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><i data-lucide="italic" class="w-4 h-4"></i></button>
+        <button type="button" data-cmd="quote" title="Pull Quote" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><i data-lucide="quote" class="w-4 h-4"></i></button>
+        <div class="h-4 w-px bg-[var(--border-subtle)] mx-1"></div>
+        <button type="button" data-cmd="code" title="Code Snippet" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><i data-lucide="code" class="w-4 h-4"></i></button>
+        <button type="button" data-cmd="list" title="Bullet List" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><i data-lucide="list" class="w-4 h-4"></i></button>
+        <button type="button" data-cmd="link" title="Insert Link" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><i data-lucide="link" class="w-4 h-4"></i></button>
+        <button type="button" data-cmd="hr" title="Divider" class="p-1.5 rounded-lg hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><i data-lucide="minus" class="w-4 h-4"></i></button>
+      </div>
+
+      <!-- Main Body Textarea -->
+      <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+        <textarea id="postBodyInput" rows="16" placeholder="Tell your story. Support for standard paragraphs, <h2> sections, <blockquote> quotes, and <pre><code> snippets..." class="w-full bg-transparent border-0 outline-none text-base font-serif-reading leading-relaxed text-[var(--text-primary)] placeholder:text-[var(--text-muted)] resize-y"></textarea>
+      </div>
+
+    </div>
+
+    <!-- PREVIEW MODE CONTAINER (Hidden by default) -->
+    <div id="previewModeContainer" class="hidden">
+      <div class="p-6 sm:p-10 rounded-3xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xl">
+        <!-- Preview Category & Metadata -->
+        <div class="flex items-center gap-3 mb-4">
+          <span id="prevCategory" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[var(--accent-surface)] text-[var(--accent-primary)]">Engineering</span>
+          <span class="text-xs text-[var(--text-muted)]" id="prevReadTime">5 min read</span>
+          <span class="text-xs text-[var(--text-muted)]">• Today</span>
+        </div>
+
+        <h1 id="prevTitle" class="text-3xl sm:text-5xl font-extrabold font-serif-reading tracking-tight leading-tight mb-6">
+          Title of your dispatch
+        </h1>
+
+        <!-- Author Preview -->
+        <div class="flex items-center gap-3 py-4 border-y border-[var(--border-subtle)] mb-8">
+          <img id="prevAuthorAvatar" src="" class="w-10 h-10 rounded-full object-cover">
+          <div>
+            <h4 id="prevAuthorName" class="text-sm font-bold">Author Name</h4>
+            <p id="prevAuthorRole" class="text-xs text-[var(--text-muted)]">Author Role</p>
+          </div>
+        </div>
+
+        <!-- Cover Preview -->
+        <div class="rounded-2xl overflow-hidden mb-8 border border-[var(--border-subtle)]">
+          <img id="prevCover" src="" class="w-full max-h-[400px] object-cover">
+        </div>
+
+        <!-- Prose Content -->
+        <div id="prevContent" class="article-prose">
+          <!-- Populated -->
+        </div>
+
+        <!-- Tags Preview -->
+        <div id="prevTags" class="mt-8 pt-6 border-t border-[var(--border-subtle)] flex flex-wrap gap-2">
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) window.lucide.createIcons();
+
+      const PRESETS = [
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80'
+      ];
+
+      const writeContainer = document.getElementById('writeModeContainer');
+      const previewContainer = document.getElementById('previewModeContainer');
+      const modeWriteBtn = document.getElementById('modeWriteBtn');
+      const modePreviewBtn = document.getElementById('modePreviewBtn');
+
+      const coverInput = document.getElementById('postCoverInput');
+      const coverPreviewImg = document.getElementById('coverPreviewImg');
+      const shufflePresetBtn = document.getElementById('shufflePresetBtn');
+      const categorySelect = document.getElementById('postCategorySelect');
+      const tagsInput = document.getElementById('postTagsInput');
+      const titleInput = document.getElementById('postTitleInput');
+      const excerptInput = document.getElementById('postExcerptInput');
+      const bodyInput = document.getElementById('postBodyInput');
+
+      const statWordCount = document.getElementById('statWordCount');
+      const statReadTime = document.getElementById('statReadTime');
+      const saveDraftBtn = document.getElementById('saveDraftBtn');
+      const publishBtn = document.getElementById('publishBtn');
+
+      // Set initial cover
+      coverInput.value = PRESETS[0];
+
+      coverInput.addEventListener('input', () => {
+        coverPreviewImg.src = coverInput.value.trim() || PRESETS[0];
+      });
+
+      shufflePresetBtn.addEventListener('click', () => {
+        const next = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+        coverInput.value = next;
+        coverPreviewImg.src = next;
+      });
+
+      // Word & reading stats
+      function updateStats() {
+        const text = (bodyInput.value || '') + ' ' + (excerptInput.value || '');
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        const readTime = Math.max(1, Math.round(words / 180));
+        statWordCount.textContent = `${words} words`;
+        statReadTime.textContent = `${readTime} min read`;
+      }
+
+      bodyInput.addEventListener('input', updateStats);
+      excerptInput.addEventListener('input', updateStats);
+
+      // Mode toggling
+      modeWriteBtn.addEventListener('click', () => {
+        writeContainer.classList.remove('hidden');
+        previewContainer.classList.add('hidden');
+        modeWriteBtn.className = 'px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs transition-colors flex items-center gap-1.5';
+        modePreviewBtn.className = 'px-3.5 py-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5';
+      });
+
+      modePreviewBtn.addEventListener('click', () => {
+        populatePreview();
+        writeContainer.classList.add('hidden');
+        previewContainer.classList.remove('hidden');
+        modePreviewBtn.className = 'px-3.5 py-1.5 rounded-lg bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs transition-colors flex items-center gap-1.5';
+        modeWriteBtn.className = 'px-3.5 py-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5';
+      });
+
+      function populatePreview() {
+        const user = ChronicleAuth.getUser() || {
+          name: 'Author',
+          role: 'Contributor',
+          avatar: 'https://ui-avatars.com/api/?name=Author&background=c95123&color=fff'
+        };
+        document.getElementById('prevCategory').textContent = categorySelect.value;
+        document.getElementById('prevTitle').textContent = titleInput.value.trim() || 'Untitled Dispatch';
+        document.getElementById('prevCover').src = coverInput.value.trim() || PRESETS[0];
+        document.getElementById('prevAuthorAvatar').src = user.avatar;
+        document.getElementById('prevAuthorName').textContent = user.name;
+        document.getElementById('prevAuthorRole').textContent = user.role;
+
+        const words = bodyInput.value.trim().split(/\s+/).length;
+        document.getElementById('prevReadTime').textContent = `${Math.max(1, Math.round(words / 180))} min read`;
+
+        const rawBody = bodyInput.value.trim();
+        const excerpt = excerptInput.value.trim();
+        let formatted = '';
+        if (excerpt) formatted += `<p class="lead">${excerpt}</p>`;
+        if (rawBody.startsWith('<')) {
+          formatted += rawBody;
+        } else {
+          formatted += `<p>${rawBody.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+        }
+        document.getElementById('prevContent').innerHTML = formatted || '<p class="italic text-muted">No content written yet...</p>';
+
+        const tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+        document.getElementById('prevTags').innerHTML = tags.map(t => `
+          <span class="px-2.5 py-1 rounded-lg text-xs bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">#${t}</span>
+        `).join('');
+      }
+
+      // Formatting Toolbar helper
+      document.querySelectorAll('[data-cmd]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cmd = btn.getAttribute('data-cmd');
+          insertFormatting(cmd);
+        });
+      });
+
+      function insertFormatting(cmd) {
+        const area = bodyInput;
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        const selected = area.value.substring(start, end);
+
+        let replacement = '';
+        switch (cmd) {
+          case 'h2': replacement = `\n<h2>${selected || 'Section Heading'}</h2>\n`; break;
+          case 'h3': replacement = `\n<h3>${selected || 'Subsection Heading'}</h3>\n`; break;
+          case 'bold': replacement = `<strong>${selected || 'bold text'}</strong>`; break;
+          case 'italic': replacement = `<em>${selected || 'italic text'}</em>`; break;
+          case 'quote': replacement = `\n<blockquote>"${selected || 'Important thesis or quote.'}"</blockquote>\n`; break;
+          case 'code': replacement = `\n<pre><code>${selected || '// Your code snippet here'}</code></pre>\n`; break;
+          case 'list': replacement = `\n<ul>\n  <li>${selected || 'Key item point'}</li>\n  <li>Second key point</li>\n</ul>\n`; break;
+          case 'link': replacement = `<a href="https://">${selected || 'link text'}</a>`; break;
+          case 'hr': replacement = `\n<hr class="my-8 border-subtle">\n`; break;
+        }
+
+        area.setRangeText(replacement, start, end, 'end');
+        updateStats();
+        area.focus();
+      }
+
+      // Save Draft
+      saveDraftBtn.addEventListener('click', () => {
+        const draft = {
+          title: titleInput.value,
+          excerpt: excerptInput.value,
+          body: bodyInput.value,
+          category: categorySelect.value,
+          tags: tagsInput.value,
+          savedAt: new Date().toLocaleTimeString()
+        };
+        localStorage.setItem('chronicle_active_draft', JSON.stringify(draft));
+        showToast('Draft successfully cached locally at ' + draft.savedAt, 'info');
+      });
+
+      // Publish Story
+      publishBtn.addEventListener('click', () => {
+        const title = titleInput.value.trim();
+        const excerpt = excerptInput.value.trim();
+        const body = bodyInput.value.trim();
+        const category = categorySelect.value;
+        const tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+        const cover = coverInput.value.trim() || PRESETS[0];
+
+        if (!title || !body) {
+          showToast('Please provide at least a title and story body.', 'error');
+          return;
+        }
+
+        const user = ChronicleAuth.getUser() || {
+          name: 'Author',
+          role: 'Contributor',
+          avatar: 'https://ui-avatars.com/api/?name=Author&background=c95123&color=fff'
+        };
+        const words = body.split(/\s+/).length;
+        const readingTime = Math.max(1, Math.round(words / 180));
+
+        let formattedContent = '';
+        if (excerpt) formattedContent += `<p class="lead">${excerpt}</p>`;
+        if (body.startsWith('<')) formattedContent += body;
+        else formattedContent += `<p>${body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+
+        const newPost = {
+          id: 'post-' + Date.now(),
+          title: title,
+          slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          excerpt: excerpt || title,
+          content: formattedContent,
+          category: category,
+          coverImage: cover,
+          publishedAt: 'Just now',
+          readingTime: readingTime,
+          featured: false,
+          trending: true,
+          likes: 0,
+          claps: 0,
+          author: {
+            name: user.name,
+            role: user.role,
+            avatar: user.avatar,
+            bio: user.bio
+          },
+          tags: tags.length ? tags : [category],
+          comments: []
+        };
+
+        // Load existing articles, prepend, and save
+        let existing = [];
+        try {
+          const raw = localStorage.getItem('chronicle_articles_v2');
+          existing = raw ? JSON.parse(raw) : [...INITIAL_ARTICLES];
+        } catch (e) {
+          existing = [...INITIAL_ARTICLES];
+        }
+
+        existing.unshift(newPost);
+        localStorage.setItem('chronicle_articles_v2', JSON.stringify(existing));
+        localStorage.removeItem('chronicle_active_draft');
+
+        showToast('🎉 Dispatch published live!', 'success');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 800);
+      });
+    });
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const color = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-[var(--text-primary)] text-[var(--bg-primary)]';
+      toast.className = `px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${color}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
