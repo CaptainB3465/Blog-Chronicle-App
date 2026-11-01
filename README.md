@@ -43,9 +43,4 @@ A structured, responsive editorial web publication following the standard websit
 
 ---
 
-##  Quick Page Links
 
--  [**Landing Page (`index.html`)**](file:///c:/Users/Administrator/Blog%20App/index.html)
--  [**Log In & Register (`login.html`)**](file:///c:/Users/Administrator/Blog%20App/login.html)
--  [**Author Dashboard (`dashboard.html`)**](file:///c:/Users/Administrator/Blog%20App/dashboard.html)
--  [**Create Blog (`create-blog.html`)**](file:///c:/Users/Administrator/Blog%20App/create-blog.html)
