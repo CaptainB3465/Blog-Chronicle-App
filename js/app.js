@@ -154,6 +154,26 @@
     updateBookmarkBadges();
     setupEventListeners();
     refreshIcons();
+    syncArticlesFromServer();
+  }
+
+  // Pull published blogs from the backend and merge them with the local cache
+  async function syncArticlesFromServer() {
+    try {
+      const res = await fetch('/api/blogs');
+      if (!res.ok) return;
+      const data = await res.json();
+      const remote = Array.isArray(data.blogs) ? data.blogs : [];
+      const remoteIds = new Set(remote.map(b => b.id));
+      articles = remote.concat(articles.filter(a => !remoteIds.has(a.id)));
+      saveArticles();
+      renderHero();
+      renderArticles();
+      renderTrendingWidget();
+      refreshIcons();
+    } catch (e) {
+      console.warn('Backend unavailable, using local articles', e);
+    }
   }
 
   // ============================================================

@@ -27,6 +27,48 @@ var ChronicleAuth = (function () {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=c95123&color=fff&size=128&bold=true`;
   }
 
+  const TOKEN_KEY = 'chronicle_token';
+
+  function getToken() {
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+  }
+
+  // Generic API helper; throws Error(message) on non-2xx responses.
+  async function apiFetch(path, options = {}) {
+    const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+    const token = getToken();
+    if (token) headers.Authorization = 'Bearer ' + token;
+    const res = await fetch('/api' + path, Object.assign({}, options, { headers }));
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Request failed (' + res.status + ')');
+    return data;
+  }
+
+  function saveSession(data, remember) {
+    const store = remember ? localStorage : sessionStorage;
+    store.setItem(STORAGE_KEY, JSON.stringify(data.user));
+    store.setItem(TOKEN_KEY, data.token);
+    updateNavUI();
+    updatePageAuthElements();
+    return data.user;
+  }
+
+  async function loginApi(email, password, remember = true) {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    return saveSession(data, remember);
+  }
+
+  async function registerApi(name, email, password, role) {
+    const data = await apiFetch('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, role })
+    });
+    return saveSession(data, true);
+  }
+
   function login(email, password, remember = true) {
     const cleanEmail = email.trim().toLowerCase();
     const derivedName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -85,6 +127,8 @@ var ChronicleAuth = (function () {
     try {
       localStorage.removeItem(STORAGE_KEY);
       sessionStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
     } catch (e) {
       console.warn('Error clearing session', e);
     }
@@ -270,6 +314,10 @@ var ChronicleAuth = (function () {
     getUser,
     login,
     register,
+    loginApi,
+    registerApi,
+    apiFetch,
+    getToken,
     logout,
     toggleTheme,
     updateNavUI,

@@ -335,34 +335,42 @@
       }
 
       // Handle Log In submission
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = loginEmail.value.trim();
-        const pass = loginPassword.value.trim();
+        const pass = loginPassword.value;
         if (!email || !pass) return;
 
-        ChronicleAuth.login(email, pass, loginRemember.checked);
-        showToast('Authenticated! Opening Dashboard...', 'success');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 600);
+        try {
+          await ChronicleAuth.loginApi(email, pass, loginRemember.checked);
+          showToast('Authenticated! Opening Dashboard...', 'success');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 600);
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
       });
 
       // Handle Registration submission
-      registerForm.addEventListener('submit', (e) => {
+      registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = regName.value.trim();
         const email = regEmail.value.trim();
         const role = regRole.value;
-        const pass = regPassword.value.trim();
+        const pass = regPassword.value;
 
         if (!name || !email || !pass) return;
 
-        ChronicleAuth.register(name, email, pass, role);
-        showToast(`Welcome, ${name.split(' ')[0]}! Heading to Dashboard...`, 'success');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 600);
+        try {
+          await ChronicleAuth.registerApi(name, email, pass, role);
+          showToast(`Welcome, ${name.split(' ')[0]}! Heading to Dashboard...`, 'success');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 600);
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
       });
 
       // Forgot password trigger

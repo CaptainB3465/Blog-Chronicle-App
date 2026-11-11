@@ -369,7 +369,7 @@
       });
 
       // Publish Story
-      publishBtn.addEventListener('click', () => {
+      publishBtn.addEventListener('click', async () => {
         const title = titleInput.value.trim();
         const excerpt = excerptInput.value.trim();
         const body = bodyInput.value.trim();
@@ -419,7 +419,27 @@
           comments: []
         };
 
-        // Load existing articles, prepend, and save
+        // Persist to backend (requires login)
+        if (!ChronicleAuth.getToken()) {
+          showToast('Please log in to publish.', 'error');
+          setTimeout(() => { window.location.href = 'login.html'; }, 900);
+          return;
+        }
+        try {
+          const data = await ChronicleAuth.apiFetch('/blogs', {
+            method: 'POST',
+            body: JSON.stringify({
+              title, excerpt, content: formattedContent, category, coverImage: cover,
+              tags: tags.length ? tags : [category]
+            })
+          });
+          newPost.id = data.blog.id;
+        } catch (err) {
+          showToast(err.message, 'error');
+          return;
+        }
+
+        // Cache locally so the feed renders it immediately
         let existing = [];
         try {
           const raw = localStorage.getItem('chronicle_articles_v2');
