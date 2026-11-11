@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story — Chronicle</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="min-h-screen flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)]">
+
+  <header class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#c95123] to-[#f59e0b] flex items-center justify-center text-white">
+        <i data-lucide="feather" class="w-5 h-5"></i>
+      </span>
+      <span class="text-xl font-extrabold tracking-tight font-serif-reading">CHRONICLE</span>
+    </a>
+    <div class="flex items-center gap-3">
+      <button data-theme-toggle aria-label="Toggle theme" class="p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)]">
+        <i data-lucide="moon" data-theme-icon class="w-5 h-5"></i>
+      </button>
+      <div class="chronicle-nav-user-slot"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8">
+    <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-6">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to all stories
+    </a>
+
+    <div id="state" class="py-24 text-center text-sm text-[var(--text-muted)]">Loading story…</div>
+
+    <article id="article" class="hidden">
+      <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)] mb-3">
+        <span id="category" class="font-bold text-[var(--accent-primary)] uppercase tracking-wider"></span>
+        <span>•</span><span id="date"></span>
+        <span>•</span><span id="readTime"></span>
+      </div>
+      <h1 id="title" class="text-3xl sm:text-4xl font-extrabold font-serif-reading tracking-tight leading-tight"></h1>
+
+      <div class="flex items-center gap-3 mt-6 pb-6 border-b border-[var(--border-subtle)]">
+        <img id="authorAvatar" alt="" class="w-11 h-11 rounded-full object-cover border border-[var(--border-subtle)]">
+        <div>
+          <p id="authorName" class="text-sm font-bold"></p>
+          <p id="authorRole" class="text-xs text-[var(--text-muted)]"></p>
+        </div>
+      </div>
+
+      <img id="cover" alt="" class="hidden w-full rounded-2xl my-8 object-cover max-h-[420px]">
+      <div id="content" class="prose-content leading-relaxed text-[var(--text-secondary)] space-y-4 mt-8"></div>
+      <div id="tags" class="flex flex-wrap gap-2 mt-10"></div>
+    </article>
+  </main>
+
+  <footer class="w-full max-w-7xl mx-auto px-4 py-6 text-center text-xs text-[var(--text-muted)]">
+    © 2026 Chronicle Independent Publishing Inc.
+  </footer>
+
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (window.lucide) window.lucide.createIcons();
+      const $ = (id) => document.getElementById(id);
+      const state = $('state');
+      const id = new URLSearchParams(location.search).get('id');
+
+      if (!id) {
+        state.textContent = 'No story selected.';
+        return;
+      }
+
+      try {
+        const { blog } = await ChronicleAuth.apiFetch('/blogs/' + encodeURIComponent(id));
+        document.title = blog.title + ' — Chronicle';
+        $('category').textContent = blog.category || '';
+        $('date').textContent = blog.publishedAt || '';
+        $('readTime').textContent = blog.readingTime + ' min read';
+        $('title').textContent = blog.title;
+        $('authorAvatar').src = blog.author.avatar || '';
+        $('authorName').textContent = blog.author.name || '';
+        $('authorRole').textContent = blog.author.role || '';
+        if (blog.coverImage) {
+          $('cover').src = blog.coverImage;
+          $('cover').classList.remove('hidden');
+        }
+        // Author content is HTML; sanitize before rendering
+        $('content').innerHTML = DOMPurify.sanitize(blog.content);
+        $('tags').innerHTML = (blog.tags || []).map((t) =>
+          `<span class="px-2.5 py-1 rounded-lg text-xs bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">#${DOMPurify.sanitize(String(t))}</span>`
+        ).join('');
+        state.classList.add('hidden');
+        $('article').classList.remove('hidden');
+      } catch (err) {
+        state.textContent = err.message === 'Blog not found.' ? 'This story could not be found.' : 'Could not load story: ' + err.message;
+      }
+      if (window.lucide) window.lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

@@ -298,20 +298,37 @@
         allArticles = [];
       }
 
-      // Filter articles created by this user
-      const displayArticles = allArticles.filter(a => a.author && a.author.name && a.author.name.toLowerCase() === user.name.toLowerCase());
+      function updateDashboardArticles(list) {
+        const mine = list.filter(a =>
+          (a.authorId && user.id && a.authorId === user.id) ||
+          (a.author && a.author.name && a.author.name.toLowerCase() === user.name.toLowerCase())
+        );
+        const totalClaps = mine.reduce((sum, a) => sum + (a.claps || 0), 0);
+        const totalComments = mine.reduce((sum, a) => sum + ((a.comments || []).length), 0);
 
-      // Update counters
-      const totalClaps = displayArticles.reduce((sum, a) => sum + (a.claps || 0), 0);
-      const totalComments = displayArticles.reduce((sum, a) => sum + ((a.comments || []).length), 0);
+        document.getElementById('dashPublishedCount').textContent = mine.length;
+        document.getElementById('tabPublishedCount').textContent = mine.length;
+        document.getElementById('dashTotalClaps').textContent = totalClaps.toLocaleString();
+        document.getElementById('dashCommentsCount').textContent = totalComments;
+        renderAuthorArticles(mine);
+      }
 
-      document.getElementById('dashPublishedCount').textContent = displayArticles.length;
-      document.getElementById('tabPublishedCount').textContent = displayArticles.length;
-      document.getElementById('dashTotalClaps').textContent = totalClaps.toLocaleString();
-      document.getElementById('dashCommentsCount').textContent = totalComments;
+      // Show initial state or loading indicator, then sync from backend
+      if (allArticles.length > 0) {
+        updateDashboardArticles(allArticles);
+      } else {
+        document.getElementById('authorStoriesList').innerHTML = '<div class="py-12 text-center text-xs text-[var(--text-muted)]">Loading your dispatches…</div>';
+      }
 
-      // Render published list
-      renderAuthorArticles(displayArticles);
+      fetch('/api/blogs')
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          if (Array.isArray(data.blogs)) {
+            localStorage.setItem('chronicle_articles_v2', JSON.stringify(data.blogs));
+            updateDashboardArticles(data.blogs);
+          }
+        })
+        .catch(() => updateDashboardArticles(allArticles));
 
       // Render draft
       renderDrafts();
@@ -380,7 +397,7 @@
       container.innerHTML = articles.map(art => `
         <div class="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 group">
           <div class="flex items-start gap-4">
-            <img src="${art.coverImage}" alt="${art.title}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0">
+            <img src="${art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80'}" alt="${art.title}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0">
             <div>
               <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)] mb-1">
                 <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${art.category}</span>
@@ -410,7 +427,7 @@
           </div>
 
           <div class="flex items-center gap-2 self-end sm:self-center">
-            <a href="index.html" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="View in feed">
+            <a href="blog.html?id=${art.id}" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="View story">
               <i data-lucide="external-link" class="w-4 h-4"></i>
             </a>
             <a href="create-blog.html" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Edit story">

@@ -4,55 +4,117 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/blogs  (public)
-router.get('/', (req, res) => {
-  res.json({ blogs: db.read('blogs') });
+// GET /api/blogs - Public: retrieve all blogs
+router.get('/', async (req, res, next) => {
+    try {
+        const blogs = await db.listBlogs();
+        res.json({ blogs });
+    } catch (error) {
+        next(error);
+    }
 });
 
-// GET /api/blogs/:id (public)
-router.get('/:id', (req, res) => {
-  const blog = db.read('blogs').find((b) => b.id === req.params.id);
-  if (!blog) return res.status(404).json({ message: 'Blog not found.' });
-  res.json({ blog });
+// GET /api/blogs/:id - Public: retrieve one blog
+router.get('/:id', async (req, res, next) => {
+    try {
+        const uuidPattern =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+        if (!uuidPattern.test(req.params.id)) {
+            return res.status(400).json({
+                message: 'Invalid blog ID.'
+            });
+        }
+
+        const blog = await db.getBlog(req.params.id);
+
+        if (!blog) {
+            return res.status(404).json({
+                message: 'Blog not found.'
+            });
+        }
+
+        res.json({ blog });
+    } catch (error) {
+        next(error);
+    }
 });
 
-// POST /api/blogs  (auth required)
-router.post('/', requireAuth, (req, res) => {
-  const { title, excerpt, content, category, coverImage, tags } = req.body || {};
-  if (!title || !String(title).trim() || !content || !String(content).trim()) {
-    return res.status(400).json({ message: 'Title and content are required.' });
-  }
+// POST /api/blogs - Authenticated users can create blogs
+router.post('/', requireAuth, async (req, res, next) => {
+    try {
+        const {
+            title,
+            excerpt,
+            content,
+            category,
+            coverImage,
+            tags
+        } = req.body || {};
 
-  const author = db.read('users').find((u) => u.id === req.auth.id);
-  if (!author) return res.status(401).json({ message: 'Author account not found.' });
+        if (
+            !title ||
+            !String(title).trim() ||
+            !content ||
+            !String(content).trim()
+        ) {
+            return res.status(400).json({
+                message: 'Title and content are required.'
+            });
+        }
 
-  const words = String(content).replace(/<[^>]*>/g, ' ').trim().split(/\s+/).length;
-  const cleanTitle = String(title).trim();
-  const blog = {
-    id: 'post-' + Date.now(),
-    title: cleanTitle,
-    slug: cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    excerpt: (excerpt && String(excerpt).trim()) || cleanTitle,
-    content: String(content),
-    category: category || 'Engineering',
-    coverImage: coverImage || '',
-    publishedAt: 'Just now',
-    createdAt: new Date().toISOString(),
-    readingTime: Math.max(1, Math.round(words / 180)),
-    featured: false,
-    trending: true,
-    likes: 0,
-    claps: 0,
-    authorId: author.id,
-    author: { name: author.name, role: author.role, avatar: author.avatar },
-    tags: Array.isArray(tags) && tags.length ? tags : [category || 'Engineering'],
-    comments: []
-  };
+        const author = await db.findUserById(req.auth.id);
 
-  const blogs = db.read('blogs');
-  blogs.unshift(blog);
-  db.write('blogs', blogs);
-  res.status(201).json({ blog });
+        if (!author) {
+            return res.status(401).json({
+                message: 'Author account not found.'
+            });
+        }
+
+        const cleanTitle = String(title).trim();
+        const cleanContent = String(content).trim();
+
+        const words = cleanContent
+            .replace(/<[^>]*>/g, ' ')
+            .trim()
+            .split(/\s+/)
+            .length;
+
+        const slug = cleanTitle
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        const cleanCategory = category
+            ? String(category).trim()
+            : 'Engineering';
+
+        const blog = await db.createBlog({
+            title: cleanTitle,
+            slug,
+            excerpt: excerpt
+                ? String(excerpt).trim()
+                : cleanTitle,
+            content: cleanContent,
+            category: cleanCategory,
+            coverImage: coverImage || '',
+            readingTime: Math.max(1, Math.ceil(words / 180)),
+            authorId: author.id,
+            author: {
+                name: author.name,
+                role: author.role,
+                avatar: author.avatar
+            },
+            tags: Array.isArray(tags) && tags.length
+                ? tags
+                : [cleanCategory]
+        });
+
+        res.status(201).json({ blog });
+
+    } catch (error) {
+        next(error);
+    }
 });
 
 module.exports = router;

@@ -115,7 +115,7 @@
               </label>
             </div>
 
-            <button type="submit" class="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 mt-3">
+            <button type="submit" id="loginSubmitBtn" class="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 mt-3 disabled:opacity-70 disabled:cursor-not-allowed">
               <span>Sign In to Dashboard</span>
               <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
@@ -199,7 +199,7 @@
               </label>
             </div>
 
-            <button type="submit" class="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 mt-3">
+            <button type="submit" id="registerSubmitBtn" class="w-full py-3 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 mt-3 disabled:opacity-70 disabled:cursor-not-allowed">
               <span>Create Account & Go to Dashboard</span>
               <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
@@ -334,6 +334,29 @@
         setTab('register');
       }
 
+      const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+      const registerSubmitBtn = document.getElementById('registerSubmitBtn');
+
+      function setButtonLoading(btn, isLoading, text, defaultLabel) {
+        if (!btn) return;
+        btn.disabled = isLoading;
+        if (isLoading) {
+          btn.innerHTML = `
+            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <span>${text}</span>
+          `;
+        } else {
+          btn.innerHTML = `
+            <span>${defaultLabel}</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+        }
+      }
+
       // Handle Log In submission
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -341,13 +364,16 @@
         const pass = loginPassword.value;
         if (!email || !pass) return;
 
+        setButtonLoading(loginSubmitBtn, true, 'Signing in to Dashboard...');
         try {
           await ChronicleAuth.loginApi(email, pass, loginRemember.checked);
+          setButtonLoading(loginSubmitBtn, true, 'Opening Dashboard...');
           showToast('Authenticated! Opening Dashboard...', 'success');
           setTimeout(() => {
             window.location.href = 'dashboard.html';
           }, 600);
         } catch (err) {
+          setButtonLoading(loginSubmitBtn, false, '', 'Sign In to Dashboard');
           showToast(err.message, 'error');
         }
       });
@@ -362,13 +388,16 @@
 
         if (!name || !email || !pass) return;
 
+        setButtonLoading(registerSubmitBtn, true, 'Creating Account...');
         try {
           await ChronicleAuth.registerApi(name, email, pass, role);
+          setButtonLoading(registerSubmitBtn, true, 'Opening Dashboard...');
           showToast(`Welcome, ${name.split(' ')[0]}! Heading to Dashboard...`, 'success');
           setTimeout(() => {
             window.location.href = 'dashboard.html';
           }, 600);
         } catch (err) {
+          setButtonLoading(registerSubmitBtn, false, '', 'Create Account & Go to Dashboard');
           showToast(err.message, 'error');
         }
       });

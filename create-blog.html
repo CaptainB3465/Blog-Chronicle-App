@@ -425,6 +425,8 @@
           setTimeout(() => { window.location.href = 'login.html'; }, 900);
           return;
         }
+        publishBtn.disabled = true;
+        publishBtn.innerHTML = '<span>Publishing...</span>';
         try {
           const data = await ChronicleAuth.apiFetch('/blogs', {
             method: 'POST',
@@ -435,6 +437,9 @@
           });
           newPost.id = data.blog.id;
         } catch (err) {
+          publishBtn.disabled = false;
+          publishBtn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>Publish</span>';
+          if (window.lucide) window.lucide.createIcons();
           showToast(err.message, 'error');
           return;
         }

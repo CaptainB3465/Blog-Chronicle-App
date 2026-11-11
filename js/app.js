@@ -143,8 +143,26 @@
   // ============================================================
   // INITIALIZATION
   // ============================================================
+  function applyViewModeFromHash() {
+    const isStoriesFeedOnly = window.location.hash === '#stories';
+    const landingSections = [
+      document.getElementById('landingHero'),
+      document.getElementById('features'),
+      document.getElementById('why-chronicle'),
+      document.getElementById('bottomCtaSection')
+    ];
+    landingSections.forEach(sec => {
+      if (sec) sec.classList.toggle('hidden', isStoriesFeedOnly);
+    });
+    if (isStoriesFeedOnly) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }
+
   function init() {
     initTheme();
+    applyViewModeFromHash();
+    window.addEventListener('hashchange', applyViewModeFromHash);
     renderHero();
     renderCategories();
     renderArticles();
@@ -163,13 +181,16 @@
       const res = await fetch('/api/blogs');
       if (!res.ok) return;
       const data = await res.json();
-      const remote = Array.isArray(data.blogs) ? data.blogs : [];
-      const remoteIds = new Set(remote.map(b => b.id));
-      articles = remote.concat(articles.filter(a => !remoteIds.has(a.id)));
+      const remote = (Array.isArray(data.blogs) ? data.blogs : []).map(b => ({
+        ...b,
+        coverImage: b.coverImage || PRESET_COVERS[0]
+      }));
+      articles = remote;
       saveArticles();
       renderHero();
       renderArticles();
       renderTrendingWidget();
+      renderAuthors();
       refreshIcons();
     } catch (e) {
       console.warn('Backend unavailable, using local articles', e);
@@ -285,7 +306,7 @@
         <!-- Main Lead Feature (8 Cols) -->
         <div class="lg:col-span-8 group cursor-pointer relative overflow-hidden rounded-3xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between" data-article-id="${leadArticle.id}">
           <div class="relative w-full h-64 sm:h-80 lg:h-96 overflow-hidden">
-            <img src="${leadArticle.coverImage}" alt="${leadArticle.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            <img src="${leadArticle.coverImage || PRESET_COVERS[0]}" alt="${leadArticle.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
             
             <div class="absolute top-4 left-4 flex items-center gap-2">
@@ -353,7 +374,7 @@
     el.heroSection.querySelectorAll('[data-article-id]').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-article-id');
-        openArticleReader(id);
+        window.location.href = 'blog.html?id=' + encodeURIComponent(id);
       });
     });
   }
@@ -450,7 +471,7 @@
           <div class="story-card rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" data-id="${art.id}">
             <!-- Card Image -->
             <div class="story-card-image-wrap relative h-48 w-full bg-[var(--bg-subtle)]">
-              <img src="${art.coverImage}" alt="${art.title}" class="story-card-image w-full h-full object-cover">
+              <img src="${art.coverImage || PRESET_COVERS[0]}" alt="${art.title}" class="story-card-image w-full h-full object-cover">
               <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[var(--bg-surface)]/90 backdrop-blur-md text-[var(--accent-primary)] shadow-sm">
                 ${art.category}
               </span>
@@ -529,7 +550,7 @@
 
             <!-- List Thumbnail -->
             <div class="w-full sm:w-44 h-36 rounded-xl overflow-hidden shrink-0 bg-[var(--bg-subtle)] relative">
-              <img src="${art.coverImage}" alt="${art.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+              <img src="${art.coverImage || PRESET_COVERS[0]}" alt="${art.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
               <button class="bookmark-btn absolute top-2 right-2 w-7 h-7 rounded-full bg-[var(--bg-surface)]/90 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent-primary)] shadow-sm" data-id="${art.id}">
                 <i data-lucide="bookmark" class="w-3.5 h-3.5 ${isSaved ? 'fill-[var(--accent-primary)] text-[var(--accent-primary)]' : ''}"></i>
               </button>
@@ -545,7 +566,7 @@
         // Prevent opening reader if bookmark or clap clicked
         if (e.target.closest('.bookmark-btn') || e.target.closest('.card-clap-btn')) return;
         const id = card.getAttribute('data-id');
-        openArticleReader(id);
+        window.location.href = 'blog.html?id=' + encodeURIComponent(id);
       });
     });
 

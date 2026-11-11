@@ -21,7 +21,7 @@ app.use('/css', express.static(path.join(root, 'css')));
 app.use('/js', express.static(path.join(root, 'js')));
 app.use('/assets', express.static(path.join(root, 'assets')));
 app.get('/', (req, res) => res.sendFile(path.join(root, 'index.html')));
-const PAGES = ['index', 'login', 'register', 'dashboard', 'create-blog'];
+const PAGES = ['index', 'login', 'register', 'dashboard', 'create-blog', 'blog'];
 app.get(/^\/([a-z-]+)(?:\.html)?$/, (req, res, next) => {
   const page = req.params[0];
   if (!PAGES.includes(page)) return next();
