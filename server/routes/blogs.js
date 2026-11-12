@@ -1,14 +1,58 @@
 const express = require('express');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { sanitizeHtml } = require('../utils/sanitizer');
 
 const router = express.Router();
+
+const APPROVED_CATEGORIES = [
+    'Engineering',
+    'Design',
+    'Design & UX',
+    'AI',
+    'Artificial Intelligence',
+    'Culture',
+    'Technology',
+    'Productivity'
+];
 
 const isValidId = (id) =>
     typeof id === 'string' &&
     id.trim().length > 0 &&
     !id.includes('/') &&
     !id.includes('\\');
+
+function validateCategory(cat) {
+    if (!cat) return null;
+    const clean = String(cat).trim();
+    return APPROVED_CATEGORIES.find(c => c.toLowerCase() === clean.toLowerCase()) || null;
+}
+
+function isValidImageUrl(url) {
+    if (!url || !String(url).trim()) return true;
+    try {
+        const parsed = new URL(String(url).trim());
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
+function validateTags(rawTags, defaultCategory) {
+    let tagList = [];
+    if (Array.isArray(rawTags)) {
+        tagList = rawTags;
+    } else if (typeof rawTags === 'string' && rawTags.trim()) {
+        tagList = rawTags.split(',').map(t => t.trim());
+    }
+
+    const cleanTags = tagList
+        .map(t => String(t).trim().replace(/^#/, '').replace(/[<>{}[\]]/g, ''))
+        .filter(t => t.length > 0 && t.length <= 30)
+        .slice(0, 10);
+
+    return cleanTags.length > 0 ? cleanTags : [defaultCategory];
+}
 
 // GET /api/blogs - Public: retrieve all blogs (supports ?search= & ?category= & ?tag=)
 router.get('/', async (req, res, next) => {
@@ -34,13 +78,8 @@ router.get('/', async (req, res, next) => {
 router.get('/user/me', requireAuth, async (req, res, next) => {
     try {
         const all = await db.listBlogs();
-        const currentUser = await db.findUserById(req.auth.id);
-        const currentName = (currentUser && currentUser.name) || req.auth.name || '';
-
-        const userBlogs = all.filter(b =>
-            (b.authorId && b.authorId === req.auth.id) ||
-            (b.author && b.author.name && currentName && b.author.name.toLowerCase() === currentName.toLowerCase())
-        );
+        // Strictly filter by immutable authorId - no name-based fallback
+        const userBlogs = all.filter(b => b.authorId === req.auth.id);
 
         res.json({ blogs: userBlogs, count: userBlogs.length });
     } catch (error) {
@@ -94,19 +133,36 @@ router.post('/', requireAuth, async (req, res, next) => {
             });
         }
 
-        let author = await db.findUserById(req.auth.id);
+        let cleanCategory = 'Engineering';
+        if (category) {
+            const matchedCategory = validateCategory(category);
+            if (!matchedCategory) {
+                return res.status(400).json({
+                    message: `Invalid category. Approved categories: ${APPROVED_CATEGORIES.join(', ')}.`
+                });
+            }
+            cleanCategory = matchedCategory;
+        }
+
+        if (coverImage && !isValidImageUrl(coverImage)) {
+            return res.status(400).json({
+                message: 'Invalid cover image URL. Must be a valid HTTP or HTTPS URL.'
+            });
+        }
+
+        const author = await db.findUserById(req.auth.id);
 
         if (!author) {
-            author = {
-                id: req.auth.id,
-                name: req.auth.name || (req.auth.email ? req.auth.email.split('@')[0] : 'Author'),
-                role: 'Contributing Author',
-                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(req.auth.email || 'Author')}&background=c95123&color=fff`
-            };
+            return res.status(401).json({
+                message: 'Authenticated author record not found.'
+            });
         }
 
         const cleanTitle = String(title).trim();
-        const cleanContent = String(content).trim();
+        const cleanContent = sanitizeHtml(String(content).trim());
+        const cleanExcerpt = excerpt
+            ? sanitizeHtml(String(excerpt).trim())
+            : cleanTitle;
 
         const words = cleanContent
             .replace(/<[^>]*>/g, ' ')
@@ -119,19 +175,15 @@ router.post('/', requireAuth, async (req, res, next) => {
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-|-$/g, '');
 
-        const cleanCategory = category
-            ? String(category).trim()
-            : 'Engineering';
+        const cleanTags = validateTags(tags, cleanCategory);
 
         const blog = await db.createBlog({
             title: cleanTitle,
             slug,
-            excerpt: excerpt
-                ? String(excerpt).trim()
-                : cleanTitle,
+            excerpt: cleanExcerpt,
             content: cleanContent,
             category: cleanCategory,
-            coverImage: coverImage || '',
+            coverImage: coverImage ? String(coverImage).trim() : '',
             readingTime: Math.max(1, Math.ceil(words / 180)),
             authorId: author.id,
             author: {
@@ -139,9 +191,7 @@ router.post('/', requireAuth, async (req, res, next) => {
                 role: author.role,
                 avatar: author.avatar
             },
-            tags: Array.isArray(tags) && tags.length
-                ? tags
-                : [cleanCategory]
+            tags: cleanTags
         });
 
         res.status(201).json({ blog });
@@ -168,17 +218,13 @@ router.put('/:id', requireAuth, async (req, res, next) => {
             });
         }
 
-        // Allow update if author matches or if author was not set
-        if (existing.authorId && existing.authorId !== req.auth.id) {
-            // Check if names match as fallback
-            const currentUser = await db.findUserById(req.auth.id);
-            const isNameMatch = currentUser && existing.author && existing.author.name &&
-                currentUser.name.toLowerCase() === existing.author.name.toLowerCase();
-            if (!isNameMatch) {
-                return res.status(403).json({
-                    message: 'You can only edit your own blogs.'
-                });
-            }
+        // Ownership verification: user can only modify their own blogs.
+        // Role-based authorization: Admins are permitted to modify any blog.
+        const isAdmin = req.auth && req.auth.role === 'Admin';
+        if (!isAdmin && (!existing.authorId || existing.authorId !== req.auth.id)) {
+            return res.status(403).json({
+                message: 'You can only modify your own blogs.'
+            });
         }
 
         const {
@@ -194,12 +240,31 @@ router.put('/:id', requireAuth, async (req, res, next) => {
             ? String(title).trim()
             : existing.title;
         const cleanContent = content !== undefined
-            ? String(content).trim()
+            ? sanitizeHtml(String(content).trim())
             : existing.content;
 
         if (!cleanTitle || !cleanContent) {
             return res.status(400).json({
                 message: 'Title and content are required.'
+            });
+        }
+
+        // Validate category if provided
+        let cleanCategory = existing.category || 'Engineering';
+        if (category !== undefined) {
+            const matchedCategory = validateCategory(category);
+            if (!matchedCategory) {
+                return res.status(400).json({
+                    message: `Invalid category. Approved categories: ${APPROVED_CATEGORIES.join(', ')}.`
+                });
+            }
+            cleanCategory = matchedCategory;
+        }
+
+        // Validate cover image if provided
+        if (coverImage !== undefined && coverImage && !isValidImageUrl(coverImage)) {
+            return res.status(400).json({
+                message: 'Invalid cover image URL. Must be a valid HTTP or HTTPS URL.'
             });
         }
 
@@ -214,13 +279,13 @@ router.put('/:id', requireAuth, async (req, res, next) => {
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-|-$/g, '');
 
-        const cleanCategory = category !== undefined && String(category).trim()
-            ? String(category).trim()
-            : existing.category || 'Engineering';
-
         const cleanExcerpt = excerpt !== undefined && String(excerpt).trim()
-            ? String(excerpt).trim()
+            ? sanitizeHtml(String(excerpt).trim())
             : existing.excerpt || cleanTitle;
+
+        const cleanTags = tags !== undefined
+            ? validateTags(tags, cleanCategory)
+            : (existing.tags && existing.tags.length ? existing.tags : [cleanCategory]);
 
         const updated = await db.updateBlog(req.params.id, {
             title: cleanTitle,
@@ -228,13 +293,9 @@ router.put('/:id', requireAuth, async (req, res, next) => {
             excerpt: cleanExcerpt,
             content: cleanContent,
             category: cleanCategory,
-            coverImage: coverImage !== undefined ? coverImage : existing.coverImage,
+            coverImage: coverImage !== undefined ? String(coverImage).trim() : existing.coverImage,
             readingTime: Math.max(1, Math.ceil(words / 180)),
-            tags: Array.isArray(tags) && tags.length
-                ? tags
-                : existing.tags && existing.tags.length
-                ? existing.tags
-                : [cleanCategory]
+            tags: cleanTags
         });
 
         res.json({ blog: updated });
@@ -260,16 +321,13 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
             });
         }
 
-        // Ownership verification: user can only delete their own blog
-        if (existing.authorId && existing.authorId !== req.auth.id) {
-            const currentUser = await db.findUserById(req.auth.id);
-            const isNameMatch = currentUser && existing.author && existing.author.name &&
-                currentUser.name.toLowerCase() === existing.author.name.toLowerCase();
-            if (!isNameMatch) {
-                return res.status(403).json({
-                    message: 'Forbidden: You can only delete your own blogs.'
-                });
-            }
+        // Ownership verification: user can only delete their own blogs.
+        // Role-based authorization: Admins are permitted to delete any blog.
+        const isAdmin = req.auth && req.auth.role === 'Admin';
+        if (!isAdmin && (!existing.authorId || existing.authorId !== req.auth.id)) {
+            return res.status(403).json({
+                message: 'You can only modify your own blogs.'
+            });
         }
 
         await db.deleteBlog(req.params.id);

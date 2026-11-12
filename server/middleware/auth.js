@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -15,14 +16,18 @@ function signToken(user) {
             name: user.name || user.username || 'User'
         },
         JWT_SECRET,
-        { expiresIn: '7d' }
+        {
+            algorithm: 'HS256',
+            expiresIn: '7d'
+        }
     );
 }
 
 function requireAuth(req, res, next) {
     const header = req.headers.authorization || '';
+
     const token = header.startsWith('Bearer ')
-        ? header.slice(7)
+        ? header.slice(7).trim()
         : null;
 
     if (!token) {
@@ -32,8 +37,19 @@ function requireAuth(req, res, next) {
     }
 
     try {
-        req.auth = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET, {
+            algorithms: ['HS256']
+        });
+
+        if (!decoded.id || !decoded.email) {
+            return res.status(401).json({
+                message: 'Invalid authentication token.'
+            });
+        }
+
+        req.auth = decoded;
         next();
+
     } catch (error) {
         return res.status(401).json({
             message: 'Invalid or expired token.'

@@ -245,7 +245,12 @@ module.exports = {
                 .select()
                 .single();
 
-            if (!result.error && result.data) {
+            if (result.error) {
+                console.error('[DB] Supabase createUser error:', result.error.message || result.error);
+                if (result.error.code) {
+                    throw new Error(`Database error: ${result.error.message} (${result.error.code})`);
+                }
+            } else if (result.data) {
                 const created = toUser(result.data);
                 // Mirror to local file
                 const users = readJson(USERS_FILE);
@@ -254,7 +259,10 @@ module.exports = {
                 return created;
             }
         } catch (err) {
-            // Fall back to local file
+            if (err.message && err.message.startsWith('Database error:')) {
+                throw err;
+            }
+            // Fall back to local file only on network disconnect
         }
 
         const users = readJson(USERS_FILE);
@@ -265,16 +273,10 @@ module.exports = {
 
     // GET ALL BLOGS (with optional search & category filters)
     async listBlogs({ search, category } = {}) {
-        const blogMap = new Map();
+        let blogs = [];
+        let supabaseSuccess = false;
 
-        // 1. Load local blogs (seed & cached)
-        const rawBlogs = readJson(BLOGS_FILE);
-        rawBlogs.forEach(b => {
-            const converted = toBlog(b);
-            if (converted && converted.id) blogMap.set(converted.id, converted);
-        });
-
-        // 2. Merge remote Supabase blogs
+        // 1. Primary authoritative query to Supabase
         try {
             let query = supabase
                 .from('blogs')
@@ -287,16 +289,18 @@ module.exports = {
 
             const res = await query;
             if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
-                res.data.forEach(r => {
-                    const converted = toBlog(r);
-                    if (converted && converted.id) blogMap.set(converted.id, converted);
-                });
+                blogs = res.data.map(toBlog).filter(Boolean);
+                supabaseSuccess = true;
             }
         } catch (err) {
-            // Keep local blogs
+            // Fall back to local cache when offline
         }
 
-        let blogs = Array.from(blogMap.values());
+        // 2. Offline / Cold-seed fallback only if Supabase returned no records or was unreachable
+        if (!supabaseSuccess) {
+            const rawBlogs = readJson(BLOGS_FILE);
+            blogs = rawBlogs.map(toBlog).filter(Boolean);
+        }
 
         if (category && category !== 'All' && category !== 'All Stories') {
             const catLower = String(category).trim().toLowerCase();
@@ -383,7 +387,12 @@ module.exports = {
                 .select()
                 .single();
 
-            if (!result.error && result.data) {
+            if (result.error) {
+                console.error('[DB] Supabase createBlog error:', result.error.message || result.error);
+                if (result.error.code) {
+                    throw new Error(`Database error: ${result.error.message} (${result.error.code})`);
+                }
+            } else if (result.data) {
                 const created = toBlog(result.data);
                 const blogs = readJson(BLOGS_FILE);
                 blogs.unshift(result.data);
@@ -391,7 +400,10 @@ module.exports = {
                 return created;
             }
         } catch (err) {
-            // Fall back to local file
+            if (err.message && err.message.startsWith('Database error:')) {
+                throw err;
+            }
+            // Fall back to local file only on network disconnect
         }
 
         const blogs = readJson(BLOGS_FILE);
@@ -421,7 +433,12 @@ module.exports = {
                 .select()
                 .maybeSingle();
 
-            if (!result.error && result.data) {
+            if (result.error) {
+                console.error('[DB] Supabase updateBlog error:', result.error.message || result.error);
+                if (result.error.code) {
+                    throw new Error(`Database error: ${result.error.message} (${result.error.code})`);
+                }
+            } else if (result.data) {
                 const updated = toBlog(result.data);
                 const blogs = readJson(BLOGS_FILE);
                 const idx = blogs.findIndex(item => item.id === id);
@@ -432,7 +449,10 @@ module.exports = {
                 return updated;
             }
         } catch (err) {
-            // Fall back to local file
+            if (err.message && err.message.startsWith('Database error:')) {
+                throw err;
+            }
+            // Fall back to local file only on network disconnect
         }
 
         const blogs = readJson(BLOGS_FILE);
@@ -452,12 +472,22 @@ module.exports = {
     // DELETE BLOG
     async deleteBlog(id) {
         try {
-            await supabase
+            const result = await supabase
                 .from('blogs')
                 .delete()
                 .eq('id', id);
+
+            if (result.error) {
+                console.error('[DB] Supabase deleteBlog error:', result.error.message || result.error);
+                if (result.error.code) {
+                    throw new Error(`Database error: ${result.error.message} (${result.error.code})`);
+                }
+            }
         } catch (err) {
-            // Fall back to local file
+            if (err.message && err.message.startsWith('Database error:')) {
+                throw err;
+            }
+            // Fall back to local file only on network disconnect
         }
 
         const blogs = readJson(BLOGS_FILE);

@@ -999,23 +999,24 @@
           return;
         }
 
+        const esc = (window.ChronicleAuth && window.ChronicleAuth.escapeHtml) || (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         container.innerHTML = stories.map(art => `
           <div class="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 group">
             <div class="flex items-start gap-4">
-              <img src="${art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80'}" alt="${art.title}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0">
+              <img src="${esc(art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80')}" alt="${esc(art.title)}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0">
               <div>
                 <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)] mb-1">
-                  <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${art.category || 'Article'}</span>
+                  <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${esc(art.category || 'Article')}</span>
                   <span>•</span>
-                  <span>${art.publishedAt || 'Recent'}</span>
+                  <span>${esc(art.publishedAt || 'Recent')}</span>
                   <span>•</span>
-                  <span>${art.readingTime || 3} min read</span>
+                  <span>${Number(art.readingTime) || 3} min read</span>
                 </div>
                 <h3 class="text-base font-bold font-serif-reading text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">
-                  ${art.title}
+                  ${esc(art.title)}
                 </h3>
                 <p class="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">
-                  ${art.excerpt || ''}
+                  ${esc(art.excerpt || '')}
                 </p>
                 
                 <div class="mt-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
@@ -1064,6 +1065,7 @@
           return;
         }
 
+        const esc = (window.ChronicleAuth && window.ChronicleAuth.escapeHtml) || (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         container.innerHTML = feedbackList.map(fb => {
           const stars = '★'.repeat(fb.rating || 5) + '☆'.repeat(Math.max(0, 5 - (fb.rating || 5)));
           const isPending = fb.status === 'Pending';
@@ -1071,15 +1073,15 @@
             <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-3">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div class="flex items-center gap-3">
-                  <img src="${fb.clientAvatar || 'https://ui-avatars.com/api/?name=Client&background=c95123&color=fff'}" alt="${fb.clientName}" class="w-9 h-9 rounded-full object-cover border border-[var(--border-subtle)]">
+                  <img src="${esc(fb.clientAvatar || 'https://ui-avatars.com/api/?name=Client&background=c95123&color=fff')}" alt="${esc(fb.clientName)}" class="w-9 h-9 rounded-full object-cover border border-[var(--border-subtle)]">
                   <div>
                     <div class="flex items-center gap-2">
-                      <span class="text-xs font-bold text-[var(--text-primary)]">${fb.clientName || 'Client Reader'}</span>
+                      <span class="text-xs font-bold text-[var(--text-primary)]">${esc(fb.clientName || 'Client Reader')}</span>
                       <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                         fb.type === 'Technical Review' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
                         fb.type === 'Editorial Suggestion' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
                         'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
-                      }">${fb.type}</span>
+                      }">${esc(fb.type)}</span>
                     </div>
                     <span class="text-[11px] text-[var(--text-muted)]">${new Date(fb.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                   </div>
@@ -1089,7 +1091,7 @@
                   <span class="text-amber-400 text-xs">${stars}</span>
                   <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${
                     isPending ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                  }">${fb.status || 'Reviewed'}</span>
+                  }">${esc(fb.status || 'Reviewed')}</span>
                 </div>
               </div>
 
@@ -1097,12 +1099,12 @@
               <div class="text-xs text-[var(--text-muted)] bg-[var(--bg-subtle)] px-3 py-2 rounded-xl flex items-center gap-1.5">
                 <i data-lucide="book-open" class="w-3.5 h-3.5 text-[var(--accent-primary)]"></i>
                 <span>Story:</span>
-                <a href="blog.html?id=${fb.blogId}" class="font-bold text-[var(--text-primary)] hover:underline truncate">${fb.blogTitle}</a>
+                <a href="blog.html?id=${encodeURIComponent(fb.blogId)}" class="font-bold text-[var(--text-primary)] hover:underline truncate">${esc(fb.blogTitle)}</a>
               </div>
 
               <!-- Message -->
               <p class="text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-subtle)]/50 p-3 rounded-xl border border-[var(--border-subtle)]">
-                "${fb.message}"
+                "${esc(fb.message)}"
               </p>
 
               <!-- Author Reply Display (if exists) -->
@@ -1112,7 +1114,7 @@
                     <i data-lucide="corner-down-right" class="w-3 h-3"></i>
                     <span>Your Author Reply:</span>
                   </div>
-                  <p class="italic text-[var(--text-primary)]">"${fb.authorReply}"</p>
+                  <p class="italic text-[var(--text-primary)]">"${esc(fb.authorReply)}"</p>
                 </div>
               ` : `
                 <!-- Reply Input Area -->
@@ -1309,6 +1311,7 @@
           return;
         }
 
+        const esc = (window.ChronicleAuth && window.ChronicleAuth.escapeHtml) || (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         container.innerHTML = stories.map(art => {
           const authorName = (art.author && art.author.name) || art.authorName || 'Chronicle Author';
           const authorAvatar = (art.author && art.author.avatar) || art.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=c95123&color=fff`;
@@ -1318,25 +1321,25 @@
           return `
             <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 group">
               <div class="flex items-start gap-4 flex-1">
-                <img src="${art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80'}" alt="${art.title}" class="w-18 h-18 sm:w-24 sm:h-24 rounded-2xl object-cover shrink-0">
+                <img src="${esc(art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80')}" alt="${esc(art.title)}" class="w-18 h-18 sm:w-24 sm:h-24 rounded-2xl object-cover shrink-0">
                 <div class="flex-1">
                   <div class="flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)] mb-1">
-                    <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${art.category || 'Engineering'}</span>
+                    <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${esc(art.category || 'Engineering')}</span>
                     <span>•</span>
-                    <span>${art.readingTime || 3} min read</span>
+                    <span>${Number(art.readingTime) || 3} min read</span>
                     <span>•</span>
                     <span class="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
-                      <img src="${authorAvatar}" class="w-4 h-4 rounded-full inline">
-                      ${authorName}
+                      <img src="${esc(authorAvatar)}" class="w-4 h-4 rounded-full inline">
+                      ${esc(authorName)}
                     </span>
                   </div>
 
                   <h3 class="text-base sm:text-lg font-bold font-serif-reading text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">
-                    ${art.title}
+                    ${esc(art.title)}
                   </h3>
                   
                   <p class="text-xs text-[var(--text-muted)] line-clamp-2 mt-1">
-                    ${art.excerpt || ''}
+                    ${esc(art.excerpt || '')}
                   </p>
 
                   <div class="mt-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
@@ -1390,24 +1393,25 @@
           return;
         }
 
+        const esc = (window.ChronicleAuth && window.ChronicleAuth.escapeHtml) || (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         container.innerHTML = feedbackList.map(fb => {
           const stars = '★'.repeat(fb.rating || 5) + '☆'.repeat(Math.max(0, 5 - (fb.rating || 5)));
           return `
             <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-3">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-xs font-bold text-[var(--text-primary)] font-serif-reading">To Author: ${fb.authorName || 'Author'}</span>
+                  <span class="text-xs font-bold text-[var(--text-primary)] font-serif-reading">To Author: ${esc(fb.authorName || 'Author')}</span>
                   <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                     fb.type === 'Technical Review' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
                     fb.type === 'Editorial Suggestion' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
                     'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
-                  }">${fb.type}</span>
+                  }">${esc(fb.type)}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-amber-400 text-xs">${stars}</span>
                   <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${
                     fb.status === 'Reviewed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                  }">${fb.status || 'Pending'}</span>
+                  }">${esc(fb.status || 'Pending')}</span>
                 </div>
               </div>
 
@@ -1415,12 +1419,12 @@
               <div class="text-xs text-[var(--text-muted)] bg-[var(--bg-subtle)] px-3 py-2 rounded-xl flex items-center gap-1.5">
                 <i data-lucide="book-open" class="w-3.5 h-3.5 text-[var(--accent-primary)]"></i>
                 <span>Story:</span>
-                <a href="blog.html?id=${fb.blogId}" class="font-bold text-[var(--text-primary)] hover:underline truncate">${fb.blogTitle}</a>
+                <a href="blog.html?id=${encodeURIComponent(fb.blogId)}" class="font-bold text-[var(--text-primary)] hover:underline truncate">${esc(fb.blogTitle)}</a>
               </div>
 
               <!-- Client Comment -->
               <p class="text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-subtle)]/50 p-3 rounded-xl border border-[var(--border-subtle)]">
-                "${fb.message}"
+                "${esc(fb.message)}"
               </p>
 
               <!-- Author Response (if any) -->
@@ -1428,9 +1432,9 @@
                 <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border-l-2 border-emerald-500 text-xs">
                   <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">
                     <i data-lucide="check-circle" class="w-3 h-3"></i>
-                    <span>Author Response from ${fb.authorName}:</span>
+                    <span>Author Response from ${esc(fb.authorName)}:</span>
                   </div>
-                  <p class="italic text-[var(--text-primary)]">"${fb.authorReply}"</p>
+                  <p class="italic text-[var(--text-primary)]">"${esc(fb.authorReply)}"</p>
                 </div>
               ` : `
                 <div class="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
@@ -1463,12 +1467,13 @@
           return;
         }
 
+        const esc = (window.ChronicleAuth && window.ChronicleAuth.escapeHtml) || (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         container.innerHTML = savedStories.map(art => `
           <div class="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between gap-4">
             <div>
-              <span class="text-[11px] text-[var(--accent-primary)] font-bold uppercase tracking-wider">${art.category || 'Story'}</span>
-              <h4 class="text-sm font-bold font-serif-reading text-[var(--text-primary)] line-clamp-1 mt-0.5">${art.title}</h4>
-              <p class="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">${art.excerpt || ''}</p>
+              <span class="text-[11px] text-[var(--accent-primary)] font-bold uppercase tracking-wider">${esc(art.category || 'Story')}</span>
+              <h4 class="text-sm font-bold font-serif-reading text-[var(--text-primary)] line-clamp-1 mt-0.5">${esc(art.title)}</h4>
+              <p class="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">${esc(art.excerpt || '')}</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <a href="blog.html?id=${art.id}" class="px-3.5 py-1.5 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-semibold">
@@ -1763,12 +1768,23 @@
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = 'Bearer ' + token;
 
-            await fetch('/api/blogs/' + encodeURIComponent(id), {
+            const res = await fetch('/api/blogs/' + encodeURIComponent(id), {
               method: 'DELETE',
               headers
             });
+
+            if (!res.ok) {
+              const errData = await res.json().catch(() => ({}));
+              throw new Error(errData.message || `Failed to delete story (${res.status})`);
+            }
           } catch (err) {
-            console.warn('Backend delete sync note:', err.message);
+            console.error('Backend delete error:', err.message);
+            showToast('Could not delete story: ' + err.message, 'error');
+            confirmDeleteBlogBtn.disabled = false;
+            confirmDeleteBlogBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i><span>Yes, Delete Story</span>';
+            if (window.lucide) window.lucide.createIcons();
+            closeDeleteBlogModal();
+            return;
           }
 
           // Update memory, localStorage, and both Author & Client views

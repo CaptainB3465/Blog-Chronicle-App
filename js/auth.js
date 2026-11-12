@@ -30,6 +30,76 @@ var ChronicleAuth = (function () {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=c95123&color=fff&size=128&bold=true`;
   }
 
+  // HTML entity escaper to protect template string rendering from XSS/injection
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  const ALLOWED_TAGS = new Set([
+    'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'strong', 'b', 'em', 'i', 'u', 's', 'strike',
+    'blockquote', 'pre', 'code', 'ul', 'ol', 'li',
+    'a', 'img', 'hr', 'br', 'table', 'thead', 'tbody',
+    'tr', 'th', 'td', 'span', 'div'
+  ]);
+
+  // Strict HTML allowlist sanitizer for rich article content
+  function sanitizeHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    let clean = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+      .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+      .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '');
+
+    clean = clean.replace(/<\/?([a-zA-Z0-9]+)([^>]*)>/g, (match, tagName, attrs) => {
+      const tag = tagName.toLowerCase();
+      if (!ALLOWED_TAGS.has(tag)) return '';
+      if (match.startsWith('</')) return `</${tag}>`;
+
+      let sanitizedAttrs = '';
+      const attrRegex = /([a-zA-Z0-9_-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
+      let attrMatch;
+
+      while ((attrMatch = attrRegex.exec(attrs)) !== null) {
+        const attrName = attrMatch[1].toLowerCase();
+        const attrValue = attrMatch[2] !== undefined ? attrMatch[2] : (attrMatch[3] !== undefined ? attrMatch[3] : (attrMatch[4] || ''));
+
+        if (attrName.startsWith('on')) continue;
+
+        if (attrName === 'href' && tag === 'a') {
+          const val = attrValue.trim().toLowerCase();
+          if (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('mailto:') || val.startsWith('#') || val.startsWith('/')) {
+            sanitizedAttrs += ` href="${encodeURI(attrValue.trim())}" rel="noopener noreferrer"`;
+          }
+        } else if (attrName === 'src' && tag === 'img') {
+          const val = attrValue.trim().toLowerCase();
+          if (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('/')) {
+            sanitizedAttrs += ` src="${encodeURI(attrValue.trim())}"`;
+          }
+        } else if (attrName === 'alt' || attrName === 'title') {
+          sanitizedAttrs += ` ${attrName}="${attrValue.replace(/"/g, '&quot;')}"`;
+        } else if (attrName === 'class') {
+          const safeClass = attrValue.replace(/[^a-zA-Z0-9-_\s]/g, '').trim();
+          if (safeClass) sanitizedAttrs += ` class="${safeClass}"`;
+        }
+      }
+
+      const isSelfClosing = match.endsWith('/>') || tag === 'br' || tag === 'hr' || tag === 'img';
+      return `<${tag}${sanitizedAttrs}${isSelfClosing ? ' /' : ''}>`;
+    });
+
+    return clean;
+  }
+
   const TOKEN_KEY = 'chronicle_token';
 
   function getToken() {
@@ -64,10 +134,10 @@ var ChronicleAuth = (function () {
     return saveSession(data, remember);
   }
 
-  async function registerApi(name, email, password, role) {
+  async function registerApi(name, email, password) {
     const data = await apiFetch('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role })
+      body: JSON.stringify({ name, email, password })
     });
     return saveSession(data, true);
   }
@@ -76,8 +146,8 @@ var ChronicleAuth = (function () {
     return loginApi(email, password, remember);
   }
 
-  function register(name, email, password, role) {
-    return registerApi(name, email, password, role);
+  function register(name, email, password) {
+    return registerApi(name, email, password);
   }
 
   function showToastNotification(message, type = 'info') {
@@ -166,6 +236,12 @@ var ChronicleAuth = (function () {
     navUserSlots.forEach(slot => {
       if (user && user.isLoggedIn) {
         const isClient = (user.role || '').toLowerCase().includes('client') || (user.role || '').toLowerCase().includes('reader');
+        const safeName = escapeHtml(user.name || 'User');
+        const safeFirstName = escapeHtml((user.name || 'User').split(' ')[0]);
+        const safeEmail = escapeHtml(user.email || '');
+        const safeRole = escapeHtml(user.role || 'Member');
+        const safeAvatar = escapeHtml(user.avatar || generateAvatar(user.name));
+
         // Authenticated State in Navbar with responsive click-toggle dropdown
         slot.innerHTML = `
           <div class="flex items-center gap-2.5">
@@ -175,17 +251,17 @@ var ChronicleAuth = (function () {
             </a>
             <div class="relative auth-dropdown-container">
               <button type="button" class="auth-profile-trigger flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-[var(--accent-primary)] transition-all cursor-pointer">
-                <img src="${user.avatar}" alt="${user.name}" class="w-8 h-8 rounded-full object-cover border border-[var(--border-subtle)] pointer-events-none">
-                <span class="hidden md:block text-xs font-semibold text-[var(--text-primary)] max-w-[120px] truncate pointer-events-none">${user.name.split(' ')[0]}</span>
+                <img src="${safeAvatar}" alt="${safeName}" class="w-8 h-8 rounded-full object-cover border border-[var(--border-subtle)] pointer-events-none">
+                <span class="hidden md:block text-xs font-semibold text-[var(--text-primary)] max-w-[120px] truncate pointer-events-none">${safeFirstName}</span>
                 <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[var(--text-muted)] hidden md:block pointer-events-none"></i>
               </button>
               <div class="auth-profile-dropdown hidden absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-2xl py-2 z-50">
                 <div class="px-4 py-2.5 border-b border-[var(--border-subtle)]">
-                  <p class="text-xs font-bold text-[var(--text-primary)] truncate">${user.name}</p>
+                  <p class="text-xs font-bold text-[var(--text-primary)] truncate">${safeName}</p>
                   <div class="flex items-center gap-1.5 mt-0.5">
-                    <span class="text-[10px] px-2 py-0.2 rounded font-semibold ${isClient ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200'}">${user.role || 'Member'}</span>
+                    <span class="text-[10px] px-2 py-0.2 rounded font-semibold ${isClient ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200'}">${safeRole}</span>
                   </div>
-                  <p class="text-[11px] text-[var(--text-muted)] truncate mt-0.5">${user.email}</p>
+                  <p class="text-[11px] text-[var(--text-muted)] truncate mt-0.5">${safeEmail}</p>
                 </div>
                 <a href="dashboard.html" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]">
                   <i data-lucide="layout-dashboard" class="w-4 h-4 text-[var(--accent-primary)]"></i>
@@ -324,7 +400,9 @@ var ChronicleAuth = (function () {
     logout,
     toggleTheme,
     updateNavUI,
-    updatePageAuthElements
+    updatePageAuthElements,
+    escapeHtml,
+    sanitizeHtml
   };
 
   // Explicitly attach to global window

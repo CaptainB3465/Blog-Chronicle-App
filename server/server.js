@@ -12,8 +12,19 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Sync remote Supabase records into local cache on boot
-db.syncFromSupabase().catch(e => console.warn('[BOOT] Supabase initial sync notice:', e.message));
+// Sync remote Supabase records into local cache on standalone boot (skip in serverless cold start)
+if (!process.env.VERCEL) {
+  db.syncFromSupabase().catch(e => console.warn('[BOOT] Supabase initial sync notice:', e.message));
+}
+
+// Production HTTP Security Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));

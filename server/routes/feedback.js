@@ -3,11 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const db = require('../db');
+const { escapeHtml } = require('../utils/sanitizer');
 
 const router = express.Router();
 const SEED_FILE = path.join(__dirname, '..', 'data', 'feedback.json');
+const BLOGS_SEED_FILE = path.join(__dirname, '..', 'data', 'blogs.json');
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const FEEDBACK_FILE = isServerless ? path.join('/tmp', 'feedback.json') : SEED_FILE;
+const BLOGS_FILE = isServerless ? path.join('/tmp', 'blogs.json') : BLOGS_SEED_FILE;
+
+function stripTags(str) {
+    return String(str || '').replace(/<[^>]*>/g, '').trim();
+}
 
 function readFeedback() {
     try {
@@ -80,19 +87,25 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ message: 'blogId and message are required.' });
         }
 
+        const cleanClientName = stripTags(clientName || 'Anonymous Reader').slice(0, 80) || 'Anonymous Reader';
+        const cleanMessage = stripTags(message).slice(0, 2000);
+        if (!cleanMessage) {
+            return res.status(400).json({ message: 'Valid feedback message is required.' });
+        }
+
         const list = readFeedback();
         const newEntry = {
             id: 'fb-' + (Date.now().toString(36) + Math.random().toString(36).substr(2, 5)),
-            blogId: String(blogId),
-            blogTitle: blogTitle || 'Untitled Story',
-            authorId: authorId || '',
-            authorName: authorName || 'Chronicle Author',
-            clientId: clientId || 'client-' + Date.now(),
-            clientName: clientName || 'Anonymous Reader',
-            clientAvatar: clientAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName || 'Reader')}&background=c95123&color=fff`,
-            type: type || 'General Feedback',
-            rating: Number(rating) || 5,
-            message: String(message).trim(),
+            blogId: stripTags(blogId).slice(0, 100),
+            blogTitle: stripTags(blogTitle || 'Untitled Story').slice(0, 200),
+            authorId: stripTags(authorId || '').slice(0, 100),
+            authorName: stripTags(authorName || 'Chronicle Author').slice(0, 80),
+            clientId: stripTags(clientId || 'client-' + Date.now()).slice(0, 100),
+            clientName: cleanClientName,
+            clientAvatar: clientAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanClientName)}&background=c95123&color=fff`,
+            type: stripTags(type || 'General Feedback').slice(0, 50),
+            rating: Math.min(5, Math.max(1, Number(rating) || 5)),
+            message: cleanMessage,
             status: 'Pending',
             authorReply: null,
             createdAt: new Date().toISOString()
@@ -141,8 +154,8 @@ router.put('/:id', (req, res) => {
             return res.status(404).json({ message: 'Feedback not found.' });
         }
 
-        if (status) list[idx].status = status;
-        if (authorReply !== undefined) list[idx].authorReply = authorReply;
+        if (status) list[idx].status = stripTags(status).slice(0, 30);
+        if (authorReply !== undefined) list[idx].authorReply = authorReply ? stripTags(authorReply).slice(0, 2000) : null;
 
         writeFeedback(list);
         res.json({ feedback: list[idx] });

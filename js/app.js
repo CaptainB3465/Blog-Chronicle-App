@@ -1046,7 +1046,9 @@
     el.readerAuthorName.textContent = art.author.name;
     el.readerAuthorRole.textContent = art.author.role;
     el.readerCoverImage.src = art.coverImage;
-    el.readerContent.innerHTML = art.content;
+    el.readerContent.innerHTML = typeof ChronicleAuth !== 'undefined' && ChronicleAuth.sanitizeHtml
+      ? ChronicleAuth.sanitizeHtml(art.content)
+      : art.content;
 
     // Follow Button
     const isFollowing = followedAuthors.includes(art.author.name);
@@ -1214,19 +1216,21 @@
       return;
     }
 
+    const esc = (s) => (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.escapeHtml ? ChronicleAuth.escapeHtml(s) : String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+
     el.commentsContainer.innerHTML = comments.map(c => `
       <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <img src="${c.avatar}" alt="${c.author}" class="w-7 h-7 rounded-full object-cover">
+            <img src="${esc(c.avatar)}" alt="${esc(c.author)}" class="w-7 h-7 rounded-full object-cover">
             <div>
-              <span class="text-xs font-bold text-[var(--text-primary)]">${c.author}</span>
-              <span class="text-[11px] text-[var(--text-muted)] ml-2">${c.date}</span>
+              <span class="text-xs font-bold text-[var(--text-primary)]">${esc(c.author)}</span>
+              <span class="text-[11px] text-[var(--text-muted)] ml-2">${esc(c.date)}</span>
             </div>
           </div>
         </div>
         <p class="text-xs text-[var(--text-secondary)] leading-relaxed pl-9">
-          ${c.text}
+          ${esc(c.text)}
         </p>
       </div>
     `).join('');
@@ -1420,25 +1424,27 @@
       );
     });
 
+    const esc = (s) => (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.escapeHtml ? ChronicleAuth.escapeHtml(s) : String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+
     if (matches.length === 0) {
       el.searchResultsList.innerHTML = `
         <div class="p-8 text-center text-xs text-[var(--text-muted)]">
-          No dispatches matching "<span class="font-bold text-[var(--text-primary)]">${query}</span>".
+          No dispatches matching "<span class="font-bold text-[var(--text-primary)]">${esc(query)}</span>".
         </div>
       `;
       return;
     }
 
     el.searchResultsList.innerHTML = matches.map(art => `
-      <div class="p-3.5 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] cursor-pointer flex items-center justify-between group transition-colors" data-search-result-id="${art.id}">
+      <div class="p-3.5 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] cursor-pointer flex items-center justify-between group transition-colors" data-search-result-id="${esc(art.id)}">
         <div class="flex items-center gap-3">
-          <img src="${art.coverImage}" alt="${art.title}" class="w-12 h-12 rounded-lg object-cover">
+          <img src="${esc(art.coverImage)}" alt="${esc(art.title)}" class="w-12 h-12 rounded-lg object-cover">
           <div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-primary)]">${art.category}</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-primary)]">${esc(art.category)}</span>
             <h4 class="text-xs sm:text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] line-clamp-1">
-              ${art.title}
+              ${esc(art.title)}
             </h4>
-            <p class="text-[11px] text-[var(--text-muted)]">${art.author.name} • ${art.readingTime} min read</p>
+            <p class="text-[11px] text-[var(--text-muted)]">${esc(art.author.name)} • ${art.readingTime} min read</p>
           </div>
         </div>
         <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--text-muted)] group-hover:translate-x-1 transition-transform"></i>
@@ -1529,7 +1535,10 @@
     if (!article) return;
     pendingDeleteId = id;
     if (el.deleteConfirmMessage) {
-      el.deleteConfirmMessage.innerHTML = `Are you sure you want to permanently delete <strong class="text-[var(--text-primary)]">"${article.title}"</strong>? This will remove the story from the publication.`;
+      const safeTitle = typeof ChronicleAuth !== 'undefined' && ChronicleAuth.escapeHtml
+        ? ChronicleAuth.escapeHtml(article.title)
+        : String(article.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      el.deleteConfirmMessage.innerHTML = `Are you sure you want to permanently delete <strong class="text-[var(--text-primary)]">"${safeTitle}"</strong>? This will remove the story from the publication.`;
     }
     if (el.deleteConfirmModal) {
       el.deleteConfirmModal.classList.remove('hidden');
@@ -1561,12 +1570,24 @@
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = 'Bearer ' + token;
 
-      await fetch('/api/blogs/' + encodeURIComponent(id), {
+      const res = await fetch('/api/blogs/' + encodeURIComponent(id), {
         method: 'DELETE',
         headers
       });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Failed to delete story (${res.status})`);
+      }
     } catch (err) {
-      console.warn('Backend delete notification:', err.message);
+      console.error('Backend delete error:', err.message);
+      showToast('Could not delete dispatch: ' + err.message, 'error');
+      if (el.confirmDeleteBtn) {
+        el.confirmDeleteBtn.disabled = false;
+        el.confirmDeleteBtn.textContent = 'Yes, Delete Story';
+      }
+      closeDeleteModal();
+      return;
     }
 
     articles = articles.filter(a => a.id !== id);
@@ -1608,16 +1629,26 @@
     const wordCount = (title + ' ' + excerpt + ' ' + content).split(/\s+/).length;
     const readingTime = Math.max(1, Math.round(wordCount / 180));
 
-    const user = (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.getUser()) || {
-      name: 'Sarah Jenkins',
-      role: 'Principal Systems Architect',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'
-    };
+    const user = typeof ChronicleAuth !== 'undefined' ? ChronicleAuth.getUser() : null;
+    if (!user || !user.isLoggedIn) {
+      showToast('Please sign in to publish or edit dispatches.', 'error');
+      if (typeof ChronicleAuth !== 'undefined') ChronicleAuth.requireAuth('index.html');
+      return;
+    }
 
     let formattedContent = '';
-    if (excerpt) formattedContent += `<p class="lead">${excerpt}</p>`;
+    if (excerpt) {
+      const safeExcerpt = typeof ChronicleAuth !== 'undefined' && ChronicleAuth.escapeHtml
+        ? ChronicleAuth.escapeHtml(excerpt)
+        : excerpt;
+      formattedContent += `<p class="lead">${safeExcerpt}</p>`;
+    }
     if (content.startsWith('<')) formattedContent += content;
     else formattedContent += `<p>${content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+
+    if (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.sanitizeHtml) {
+      formattedContent = ChronicleAuth.sanitizeHtml(formattedContent);
+    }
 
     let savedBlog = null;
 
@@ -1639,67 +1670,25 @@
             body: JSON.stringify(payload)
           }
         );
-        if (res && res.blog) savedBlog = res.blog;
+        if (res && res.blog) {
+          savedBlog = res.blog;
+        } else {
+          throw new Error('Invalid response received from server.');
+        }
       } catch (err) {
-        console.warn('Backend API notification, falling back to local storage:', err.message);
+        console.error('Backend story save failed:', err.message);
+        showToast('Could not save story: ' + err.message, 'error');
+        return;
       }
     }
 
-    if (editId) {
-      // Update existing article
-      const idx = articles.findIndex(a => a.id === editId);
-      if (idx !== -1) {
-        articles[idx] = savedBlog || {
-          ...articles[idx],
-          title,
-          excerpt: excerpt || title,
-          content: formattedContent,
-          category,
-          coverImage,
-          tags: tags.length ? tags : [category],
-          readingTime
-        };
-      }
-      showToast('Dispatch updated successfully! ✨', 'success');
-    } else {
-      // Create new article
-      const newPost = savedBlog || {
-        id: 'post-' + Date.now(),
-        title,
-        slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        excerpt: excerpt || title,
-        content: formattedContent,
-        category,
-        coverImage,
-        tags: tags.length ? tags : [category],
-        readingTime,
-        publishedAt: 'Just now',
-        likes: 0,
-        claps: 0,
-        featured: false,
-        trending: true,
-        author: {
-          name: user.name,
-          role: user.role,
-          avatar: user.avatar
-        },
-        comments: []
-      };
-      articles.unshift(newPost);
-      showToast('Your dispatch was published live! 🎉', 'success');
-    }
+    // Refresh authoritative article list directly from the backend
+    await syncArticlesFromServer();
 
-    saveArticles();
     if (el.writeStoryForm) el.writeStoryForm.reset();
     closeWriteModal();
 
-    // Re-render views
-    renderHero();
-    renderCategories();
-    renderTagsRail();
-    renderArticles();
-    renderTrendingWidget();
-    refreshIcons();
+    showToast(editId ? 'Dispatch updated successfully! ✨' : 'Your dispatch was published live! 🎉', 'success');
   }
 
   // ============================================================

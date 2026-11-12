@@ -320,18 +320,26 @@
         const rawBody = bodyInput.value.trim();
         const excerpt = excerptInput.value.trim();
         let formatted = '';
-        if (excerpt) formatted += `<p class="lead">${excerpt}</p>`;
+        if (excerpt) {
+          const safeExcerpt = typeof ChronicleAuth !== 'undefined' && ChronicleAuth.escapeHtml ? ChronicleAuth.escapeHtml(excerpt) : excerpt;
+          formatted += `<p class="lead">${safeExcerpt}</p>`;
+        }
         if (rawBody.startsWith('<')) {
           formatted += rawBody;
         } else {
           formatted += `<p>${rawBody.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
         }
-        document.getElementById('prevContent').innerHTML = formatted || '<p class="italic text-muted">No content written yet...</p>';
+
+        const cleanFormatted = typeof ChronicleAuth !== 'undefined' && ChronicleAuth.sanitizeHtml
+          ? ChronicleAuth.sanitizeHtml(formatted)
+          : formatted;
+        document.getElementById('prevContent').innerHTML = cleanFormatted || '<p class="italic text-muted">No content written yet...</p>';
 
         const tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
-        document.getElementById('prevTags').innerHTML = tags.map(t => `
-          <span class="px-2.5 py-1 rounded-lg text-xs bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">#${t}</span>
-        `).join('');
+        document.getElementById('prevTags').innerHTML = tags.map(t => {
+          const safeTag = typeof ChronicleAuth !== 'undefined' && ChronicleAuth.escapeHtml ? ChronicleAuth.escapeHtml(t) : t;
+          return `<span class="px-2.5 py-1 rounded-lg text-xs bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">#${safeTag}</span>`;
+        }).join('');
       }
 
       // Formatting Toolbar helper
@@ -500,34 +508,21 @@
               })
             }
           );
-          if (data && data.blog) savedBlog = data.blog;
+          if (data && data.blog) {
+            savedBlog = data.blog;
+          } else {
+            throw new Error('Invalid response received from server.');
+          }
         } catch (err) {
-          console.warn('Backend API notification, saving locally:', err.message);
+          console.error('Publishing failed on backend:', err.message);
+          publishBtn.disabled = false;
+          publishBtn.innerHTML = editId ? '<i data-lucide="check" class="w-4 h-4"></i><span>Update Story</span>' : '<i data-lucide="send" class="w-4 h-4"></i><span>Publish Story</span>';
+          if (window.lucide) window.lucide.createIcons();
+          showToast('Could not save story: ' + err.message, 'error');
+          return;
         }
 
-        const newPost = savedBlog || {
-          id: editId || 'post-' + Date.now(),
-          title: title,
-          slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          excerpt: excerpt || title,
-          content: formattedContent,
-          category: category,
-          coverImage: cover,
-          publishedAt: 'Just now',
-          readingTime: readingTime,
-          featured: false,
-          trending: true,
-          likes: 0,
-          claps: 0,
-          author: {
-            name: user.name,
-            role: user.role,
-            avatar: user.avatar,
-            bio: user.bio
-          },
-          tags: tags.length ? tags : [category],
-          comments: []
-        };
+        const newPost = savedBlog;
 
         // Cache locally so the feed renders it immediately
         let existing = [];

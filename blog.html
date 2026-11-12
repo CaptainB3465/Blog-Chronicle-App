@@ -196,8 +196,8 @@
         }
 
         const isOwner = currentUser && (
-          (blog.authorId && currentUser.id && blog.authorId === currentUser.id) ||
-          (blog.author && blog.author.name && currentUser.name && blog.author.name.toLowerCase() === currentUser.name.toLowerCase())
+          (currentUser.role === 'Admin') ||
+          (blog.authorId && currentUser.id && blog.authorId === currentUser.id)
         );
         if (isOwner) {
           const actions = $('authorActions');
@@ -233,10 +233,15 @@
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
 
-                await fetch('/api/blogs/' + encodeURIComponent(blog.id), {
+                const res = await fetch('/api/blogs/' + encodeURIComponent(blog.id), {
                   method: 'DELETE',
                   headers
                 });
+
+                if (!res.ok) {
+                  const errData = await res.json().catch(() => ({}));
+                  throw new Error(errData.message || `Failed to delete story (${res.status})`);
+                }
 
                 try {
                   const raw = localStorage.getItem('chronicle_articles_v2');
@@ -274,23 +279,31 @@
               return;
             }
 
+            const esc = (s) => (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.escapeHtml ? ChronicleAuth.escapeHtml(s) : DOMPurify.sanitize(String(s || '')));
+
             container.innerHTML = list.map(fb => {
               const stars = '★'.repeat(fb.rating || 5) + '☆'.repeat(Math.max(0, 5 - (fb.rating || 5)));
+              const safeAvatar = esc(fb.clientAvatar || 'https://ui-avatars.com/api/?name=Client&background=c95123&color=fff');
+              const safeName = esc(fb.clientName || 'Reader');
+              const safeType = esc(fb.type || 'Feedback');
+              const safeMsg = esc(fb.message || '');
+              const safeAuthor = esc(fb.authorName || 'Author');
+              const safeReply = esc(fb.authorReply || '');
               return `
                 <div class="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                      <img src="${fb.clientAvatar || 'https://ui-avatars.com/api/?name=Client&background=c95123&color=fff'}" class="w-6 h-6 rounded-full object-cover">
-                      <span class="text-xs font-bold text-[var(--text-primary)]">${fb.clientName || 'Reader'}</span>
-                      <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)]">${fb.type}</span>
+                      <img src="${safeAvatar}" class="w-6 h-6 rounded-full object-cover">
+                      <span class="text-xs font-bold text-[var(--text-primary)]">${safeName}</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)]">${safeType}</span>
                     </div>
                     <span class="text-amber-400 text-xs">${stars}</span>
                   </div>
-                  <p class="text-xs text-[var(--text-secondary)]">"${fb.message}"</p>
+                  <p class="text-xs text-[var(--text-secondary)]">"${safeMsg}"</p>
                   ${fb.authorReply ? `
                     <div class="ml-3 p-2.5 rounded-lg bg-orange-50/70 dark:bg-orange-950/20 border-l-2 border-[var(--accent-primary)] text-xs text-[var(--text-secondary)]">
-                      <strong class="text-[var(--accent-primary)] text-[11px] block">Author Reply from ${fb.authorName}:</strong>
-                      <span>"${fb.authorReply}"</span>
+                      <strong class="text-[var(--accent-primary)] text-[11px] block">Author Reply from ${safeAuthor}:</strong>
+                      <span>"${safeReply}"</span>
                     </div>
                   ` : ''}
                 </div>
