@@ -134,15 +134,23 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
+        <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
+          <button type="button" id="openProfileModalBtn" class="px-3.5 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer flex items-center gap-1.5" title="View & Edit Profile">
+            <i data-lucide="user-cog" class="w-4 h-4 text-[var(--accent-primary)]"></i>
+            <span>Edit Profile</span>
+          </button>
           <button type="button" id="switchUserQuickBtn" class="px-3.5 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer flex items-center gap-1.5" title="Switch Demo Account">
             <i data-lucide="user-check" class="w-4 h-4 text-[var(--accent-primary)]"></i>
-            <span id="switchUserBtnText">Switch to Client (David)</span>
+            <span id="switchUserBtnText">Switch Account</span>
           </button>
-          <a href="create-blog.html" id="dashPrimaryActionBtn" class="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2">
+          <a href="create-blog.html" id="dashPrimaryActionBtn" class="px-4 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5">
             <i data-lucide="square-pen" class="w-4 h-4"></i>
             <span id="dashPrimaryActionText">New Story</span>
           </a>
+          <button type="button" id="dashLogoutBtn" data-auth-logout class="px-3.5 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-xs font-bold text-rose-500 transition-colors cursor-pointer flex items-center gap-1.5" title="Sign Out of Session">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Log Out</span>
+          </button>
         </div>
 
       </div>
@@ -587,6 +595,86 @@
     </div>
   </div>
 
+  <!-- ============================================================
+       MODAL: USER PROFILE & SETTINGS
+       ============================================================ -->
+  <div id="userProfileModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl w-full max-w-lg p-6 sm:p-7 shadow-2xl relative">
+      
+      <div class="flex items-center justify-between mb-5 pb-4 border-b border-[var(--border-subtle)]">
+        <div class="flex items-center gap-3">
+          <span class="w-10 h-10 rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-[var(--accent-primary)] flex items-center justify-center">
+            <i data-lucide="user" class="w-5 h-5"></i>
+          </span>
+          <div>
+            <h3 class="text-lg font-bold font-serif-reading text-[var(--text-primary)]">User Profile & Account</h3>
+            <p class="text-xs text-[var(--text-muted)]">Manage your credentials, author identity & role</p>
+          </div>
+        </div>
+        <button type="button" id="closeProfileModalBtn" class="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="userProfileForm" class="space-y-4">
+        <!-- Avatar Preview & Input -->
+        <div class="flex items-center gap-4 p-4 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+          <img id="profileModalAvatarPreview" src="" alt="Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-[var(--accent-primary)] shadow-sm shrink-0">
+          <div class="flex-1">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">Avatar Image URL</label>
+            <input type="url" id="profileModalAvatarInput" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">Display Name</label>
+          <input type="text" id="profileModalNameInput" required class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-sm font-semibold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">Email Address (Registered)</label>
+          <input type="email" id="profileModalEmailInput" readonly class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)]/60 border border-[var(--border-subtle)] text-xs text-[var(--text-muted)] font-mono cursor-not-allowed">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">Role & Designation</label>
+          <select id="profileModalRoleSelect" class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+            <option value="Author & Contributor">Author & Contributor (Publishing & Editorial)</option>
+            <option value="Principal Systems Architect">Principal Systems Architect</option>
+            <option value="Client & Reviewer">Client & Reviewer (Reader Feedback)</option>
+          </select>
+        </div>
+
+        <!-- Session Status -->
+        <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+            <span class="font-bold">Active JWT Session:</span>
+            <span>Authenticated</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20">7-Day Token</span>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
+          <button type="button" data-auth-logout class="px-4 py-2.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Sign Out</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" id="cancelProfileModalBtn" class="px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" id="saveProfileBtn" class="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Save Changes</span>
+            </button>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
   <!-- Workspace Footer -->
   <footer class="mt-16 w-full border-t border-[var(--border-subtle)] py-6 bg-[var(--bg-surface)]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
@@ -607,16 +695,15 @@
       if (window.lucide) window.lucide.createIcons();
 
       let currentUser = ChronicleAuth.getUser();
+      const token = ChronicleAuth.getToken();
 
-      // If no session, auto-login demo author or guide
-      if (!currentUser) {
-        try {
-          currentUser = await ChronicleAuth.loginDemoAuthor();
-        } catch (e) {
-          showToast('Please log in to access the workspace dashboard.', 'info');
-          setTimeout(() => { window.location.href = 'login.html'; }, 800);
-          return;
-        }
+      // Protected Dashboard Route Guard (Objective 2)
+      if (!currentUser || !currentUser.isLoggedIn || !token) {
+        showToast('Private workspace: Please log in to view your dashboard.', 'info');
+        setTimeout(() => {
+          window.location.href = 'login.html?redirect=' + encodeURIComponent('dashboard.html');
+        }, 600);
+        return;
       }
 
       // Initial active role: based on user.role
@@ -664,6 +751,79 @@
       }
 
       syncUserProfileUI();
+
+      // Profile Modal Handling (Objective 4: User Profile & Account Settings)
+      const openProfileModalBtn = document.getElementById('openProfileModalBtn');
+      const userProfileModal = document.getElementById('userProfileModal');
+      const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
+      const cancelProfileModalBtn = document.getElementById('cancelProfileModalBtn');
+      const userProfileForm = document.getElementById('userProfileForm');
+
+      const profileModalAvatarPreview = document.getElementById('profileModalAvatarPreview');
+      const profileModalAvatarInput = document.getElementById('profileModalAvatarInput');
+      const profileModalNameInput = document.getElementById('profileModalNameInput');
+      const profileModalEmailInput = document.getElementById('profileModalEmailInput');
+      const profileModalRoleSelect = document.getElementById('profileModalRoleSelect');
+
+      if (openProfileModalBtn) {
+        openProfileModalBtn.addEventListener('click', () => {
+          if (!currentUser) return;
+          profileModalAvatarPreview.src = currentUser.avatar || 'https://ui-avatars.com/api/?name=User&background=c95123&color=fff';
+          profileModalAvatarInput.value = currentUser.avatar || '';
+          profileModalNameInput.value = currentUser.name || '';
+          profileModalEmailInput.value = currentUser.email || '';
+          profileModalRoleSelect.value = currentUser.role || 'Author & Contributor';
+          userProfileModal.classList.remove('hidden');
+        });
+      }
+
+      if (profileModalAvatarInput) {
+        profileModalAvatarInput.addEventListener('input', () => {
+          const val = profileModalAvatarInput.value.trim();
+          if (val) profileModalAvatarPreview.src = val;
+        });
+      }
+
+      function closeProfileModal() {
+        if (userProfileModal) userProfileModal.classList.add('hidden');
+      }
+
+      if (closeProfileModalBtn) closeProfileModalBtn.addEventListener('click', closeProfileModal);
+      if (cancelProfileModalBtn) cancelProfileModalBtn.addEventListener('click', closeProfileModal);
+
+      if (userProfileForm) {
+        userProfileForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const newName = profileModalNameInput.value.trim();
+          const newAvatar = profileModalAvatarInput.value.trim() || currentUser.avatar;
+          const newRole = profileModalRoleSelect.value;
+          if (!newName) return;
+
+          try {
+            const data = await ChronicleAuth.apiFetch('/auth/profile', {
+              method: 'PUT',
+              body: JSON.stringify({
+                name: newName,
+                avatar: newAvatar,
+                role: newRole
+              })
+            });
+
+            // Update local session
+            currentUser = Object.assign({}, currentUser, data.user);
+            localStorage.setItem('chronicle_active_session_v3', JSON.stringify(currentUser));
+            sessionStorage.setItem('chronicle_active_session_v3', JSON.stringify(currentUser));
+
+            syncUserProfileUI();
+            ChronicleAuth.updateNavUI();
+            closeProfileModal();
+            showToast('Profile updated successfully!', 'success');
+            refreshData();
+          } catch (err) {
+            showToast('Could not update profile: ' + err.message, 'error');
+          }
+        });
+      }
 
       // Quick Switch Account between Sarah (Author) and David (Client)
       if (switchUserQuickBtn) {
@@ -727,11 +887,12 @@
 
       // Data caches
       let allBlogs = [];
+      let myUserBlogs = [];
       let allFeedback = [];
       let bookmarkedIds = JSON.parse(localStorage.getItem('chronicle_client_bookmarks') || '[]');
 
       async function refreshData() {
-        // Fetch blogs
+        // 1. Fetch public blogs (for client portal explore & review)
         try {
           const res = await fetch('/api/blogs');
           if (res.ok) {
@@ -748,7 +909,21 @@
           allBlogs = [...INITIAL_ARTICLES];
         }
 
-        // Fetch feedback
+        // 2. Fetch strictly authenticated user's blogs (Objective 3: Display only logged-in user's blogs)
+        try {
+          const myRes = await ChronicleAuth.apiFetch('/blogs/user/me');
+          if (myRes && Array.isArray(myRes.blogs)) {
+            myUserBlogs = myRes.blogs;
+          }
+        } catch (e) {
+          console.warn('Could not fetch /api/blogs/user/me, falling back to local author match', e);
+          myUserBlogs = allBlogs.filter(b =>
+            (b.authorId && currentUser.id && b.authorId === currentUser.id) ||
+            (b.author && b.author.name && currentUser.name && b.author.name.toLowerCase() === currentUser.name.toLowerCase())
+          );
+        }
+
+        // 3. Fetch feedback
         try {
           const fbRes = await fetch('/api/feedback');
           if (fbRes.ok) {
@@ -766,13 +941,10 @@
       }
 
       // ============================================================
-      // AUTHOR DASHBOARD LOGIC
+      // AUTHOR DASHBOARD LOGIC (Displays only logged-in author's blogs)
       // ============================================================
       function renderAuthorDashboard() {
-        const myBlogs = allBlogs.filter(b =>
-          (b.authorId && currentUser.id && b.authorId === currentUser.id) ||
-          (b.author && b.author.name && currentUser.name && b.author.name.toLowerCase() === currentUser.name.toLowerCase())
-        );
+        const myBlogs = myUserBlogs;
 
         const myFeedback = allFeedback.filter(f =>
           (f.authorId && currentUser.id && f.authorId === currentUser.id) ||
@@ -807,10 +979,7 @@
 
       function applyAuthorStoryFilters(myBlogs = null) {
         if (!myBlogs) {
-          myBlogs = allBlogs.filter(b =>
-            (b.authorId && currentUser.id && b.authorId === currentUser.id) ||
-            (b.author && b.author.name && currentUser.name && b.author.name.toLowerCase() === currentUser.name.toLowerCase())
-          );
+          myBlogs = myUserBlogs;
         }
 
         const q = (authorSearchInput ? authorSearchInput.value : '').trim().toLowerCase();
@@ -1629,6 +1798,7 @@
 
           // Update memory, localStorage, and both Author & Client views
           allBlogs = allBlogs.filter(b => b.id !== id);
+          myUserBlogs = myUserBlogs.filter(b => b.id !== id);
           try {
             localStorage.setItem('chronicle_articles_v2', JSON.stringify(allBlogs));
           } catch (e) {}

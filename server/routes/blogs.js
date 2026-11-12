@@ -30,6 +30,24 @@ router.get('/', async (req, res, next) => {
     }
 });
 
+// GET /api/blogs/user/me - Authenticated: retrieve only the logged-in user's blogs
+router.get('/user/me', requireAuth, async (req, res, next) => {
+    try {
+        const all = await db.listBlogs();
+        const currentUser = await db.findUserById(req.auth.id);
+        const currentName = (currentUser && currentUser.name) || req.auth.name || '';
+
+        const userBlogs = all.filter(b =>
+            (b.authorId && b.authorId === req.auth.id) ||
+            (b.author && b.author.name && currentName && b.author.name.toLowerCase() === currentName.toLowerCase())
+        );
+
+        res.json({ blogs: userBlogs, count: userBlogs.length });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // GET /api/blogs/:id - Public: retrieve one blog
 router.get('/:id', async (req, res, next) => {
     try {
@@ -225,8 +243,8 @@ router.put('/:id', requireAuth, async (req, res, next) => {
     }
 });
 
-// DELETE /api/blogs/:id - Delete a blog post with confirmed authorization
-router.delete('/:id', async (req, res, next) => {
+// DELETE /api/blogs/:id - Authenticated author can delete their blog post
+router.delete('/:id', requireAuth, async (req, res, next) => {
     try {
         if (!isValidId(req.params.id)) {
             return res.status(400).json({
@@ -240,6 +258,18 @@ router.delete('/:id', async (req, res, next) => {
             return res.status(404).json({
                 message: 'Blog not found.'
             });
+        }
+
+        // Ownership verification: user can only delete their own blog
+        if (existing.authorId && existing.authorId !== req.auth.id) {
+            const currentUser = await db.findUserById(req.auth.id);
+            const isNameMatch = currentUser && existing.author && existing.author.name &&
+                currentUser.name.toLowerCase() === existing.author.name.toLowerCase();
+            if (!isNameMatch) {
+                return res.status(403).json({
+                    message: 'Forbidden: You can only delete your own blogs.'
+                });
+            }
         }
 
         await db.deleteBlog(req.params.id);

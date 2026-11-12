@@ -178,6 +178,37 @@ module.exports = {
         return toUser(match);
     },
 
+    // UPDATE USER PROFILE
+    async updateUserProfile(id, updates) {
+        const payload = {};
+        if (updates.name) payload.username = updates.name;
+        if (updates.role) payload.role = updates.role;
+        if (updates.avatar) payload.avatar = updates.avatar;
+
+        try {
+            await supabase
+                .from('users')
+                .update(payload)
+                .eq('id', id);
+        } catch (e) {
+            console.warn('[DB] Supabase user profile update note:', e.message);
+        }
+
+        const users = readJson(USERS_FILE);
+        const idx = users.findIndex(u => u.id === id);
+        if (idx !== -1) {
+            if (updates.name) {
+                users[idx].username = updates.name;
+                users[idx].name = updates.name;
+            }
+            if (updates.role) users[idx].role = updates.role;
+            if (updates.avatar) users[idx].avatar = updates.avatar;
+            writeJson(USERS_FILE, users);
+            return toUser(users[idx]);
+        }
+        return this.findUserById(id);
+    },
+
     // CREATE USER
     async createUser(u) {
         const row = {
@@ -223,8 +254,16 @@ module.exports = {
 
     // GET ALL BLOGS (with optional search & category filters)
     async listBlogs({ search, category } = {}) {
-        let blogs = null;
+        const blogMap = new Map();
 
+        // 1. Load local blogs (seed & cached)
+        const rawBlogs = readJson(BLOGS_FILE);
+        rawBlogs.forEach(b => {
+            const converted = toBlog(b);
+            if (converted && converted.id) blogMap.set(converted.id, converted);
+        });
+
+        // 2. Merge remote Supabase blogs
         try {
             let query = supabase
                 .from('blogs')
@@ -237,20 +276,20 @@ module.exports = {
 
             const res = await query;
             if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
-                blogs = res.data.map(toBlog);
+                res.data.forEach(r => {
+                    const converted = toBlog(r);
+                    if (converted && converted.id) blogMap.set(converted.id, converted);
+                });
             }
         } catch (err) {
-            // Fall back to local file
+            // Keep local blogs
         }
 
-        if (!blogs) {
-            const rawBlogs = readJson(BLOGS_FILE);
-            blogs = rawBlogs.map(toBlog);
+        let blogs = Array.from(blogMap.values());
 
-            if (category && category !== 'All' && category !== 'All Stories') {
-                const catLower = String(category).trim().toLowerCase();
-                blogs = blogs.filter(b => (b.category || '').toLowerCase() === catLower);
-            }
+        if (category && category !== 'All' && category !== 'All Stories') {
+            const catLower = String(category).trim().toLowerCase();
+            blogs = blogs.filter(b => (b.category || '').toLowerCase() === catLower);
         }
 
         if (search && String(search).trim()) {

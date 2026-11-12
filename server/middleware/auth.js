@@ -8,7 +8,12 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
 
 function signToken(user) {
     return jwt.sign(
-        { id: user.id, email: user.email },
+        {
+            id: user.id,
+            email: user.email,
+            role: user.role || 'Author',
+            name: user.name || user.username || 'User'
+        },
         JWT_SECRET,
         { expiresIn: '7d' }
     );

@@ -162,4 +162,33 @@ router.get('/me', requireAuth, async (req, res, next) => {
     }
 });
 
+// PUT /api/auth/profile - Update user profile information
+router.put('/profile', requireAuth, async (req, res, next) => {
+    try {
+        const { name, role, avatar } = req.body || {};
+
+        if (!name || !String(name).trim()) {
+            return res.status(400).json({ message: 'Name cannot be empty.' });
+        }
+
+        const updated = await db.updateUserProfile(req.auth.id, {
+            name: String(name).trim(),
+            role: role ? String(role).trim() : undefined,
+            avatar: avatar ? String(avatar).trim() : undefined
+        });
+
+        if (!updated) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        res.json({
+            message: 'Profile updated successfully.',
+            user: publicUser(updated)
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
 module.exports = router;
