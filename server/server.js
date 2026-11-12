@@ -40,12 +40,23 @@ app.use('/api', (req, res) => res.status(404).json({ message: 'Not found.' }));
 const root = path.join(__dirname, '..');
 app.use(express.static(root));
 
-const PAGES = ['index', 'login', 'register', 'dashboard', 'create-blog', 'blog'];
-PAGES.forEach(page => {
-  app.get(`/${page}`, (req, res) => res.sendFile(path.join(root, `${page}.html`)));
-  app.get(`/${page}.html`, (req, res) => res.sendFile(path.join(root, `${page}.html`)));
-});
-app.get('/', (req, res) => res.sendFile(path.join(root, 'index.html')));
+// Explicit static file and page routes so Vercel @vercel/nft traces and bundles all frontend assets
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
+app.get('/index', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
+app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'login.html')));
+app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'login.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'login.html')));
+app.get('/register.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'login.html')));
+app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard.html')));
+app.get('/dashboard.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard.html')));
+app.get('/create-blog', (req, res) => res.sendFile(path.join(__dirname, '..', 'create-blog.html')));
+app.get('/create-blog.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'create-blog.html')));
+app.get('/blog', (req, res) => res.sendFile(path.join(__dirname, '..', 'blog.html')));
+app.get('/blog.html', (req, res) => res.sendFile(path.join(__dirname, '..', 'blog.html')));
+app.get('/css/styles.css', (req, res) => res.sendFile(path.join(__dirname, '..', 'css', 'styles.css')));
+app.get('/js/auth.js', (req, res) => res.sendFile(path.join(__dirname, '..', 'js', 'auth.js')));
+app.get('/js/app.js', (req, res) => res.sendFile(path.join(__dirname, '..', 'js', 'app.js')));
 
 app.use((err, req, res, next) => {
   console.error(err);
