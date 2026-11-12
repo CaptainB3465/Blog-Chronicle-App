@@ -236,7 +236,7 @@ vercel --prod
 
 ---
 
-## 🔒 Security & Route Protection
+##  Security & Route Protection
 
 1. **JWT Verification**: Protected endpoints verify tokens via HTTP `Authorization: Bearer <token>` headers using `server/middleware/auth.js`.
 2. **Password Encryption**: All user passwords are encrypted using salted `bcryptjs` hashes before saving to Supabase or local caches. Plaintext passwords are never stored.
