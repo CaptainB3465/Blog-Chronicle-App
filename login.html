@@ -346,10 +346,21 @@
       if (switchToRegLink) switchToRegLink.addEventListener('click', () => setTab('register'));
       if (switchToLoginLink) switchToLoginLink.addEventListener('click', () => setTab('login'));
 
-      // Check URL param ?tab=register
+      // Check URL params (?tab=register or ?logged_out=1)
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('tab') === 'register') {
         setTab('register');
+      }
+
+      if (urlParams.get('logged_out') === '1' || urlParams.get('logged_out') === 'true') {
+        setTimeout(() => {
+          showToast('You have been signed out successfully. See you next time! 👋', 'info');
+        }, 120);
+        if (window.history && window.history.replaceState) {
+          const redirectParam = urlParams.get('redirect');
+          const cleanUrl = window.location.pathname + (redirectParam ? '?redirect=' + encodeURIComponent(redirectParam) : '');
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
       }
 
       const loginSubmitBtn = document.getElementById('loginSubmitBtn');

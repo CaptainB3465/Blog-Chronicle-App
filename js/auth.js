@@ -143,6 +143,30 @@ var ChronicleAuth = (function () {
     return user;
   }
 
+  function showToastNotification(message, type = 'info') {
+    if (typeof window.showToast === 'function') {
+      window.showToast(message, type);
+      return;
+    }
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.className = 'fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    const color = type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-[var(--text-primary)] text-[var(--bg-primary)]';
+    toast.className = `px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${color}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
   function logout() {
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -153,7 +177,18 @@ var ChronicleAuth = (function () {
       console.warn('Error clearing session', e);
     }
     updateNavUI();
-    window.location.href = 'login.html';
+
+    showToastNotification('Signing out of workspace... 👋', 'info');
+
+    if (document.body) {
+      document.body.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+      document.body.style.opacity = '0.35';
+      document.body.style.transform = 'scale(0.995)';
+    }
+
+    setTimeout(() => {
+      window.location.href = 'login.html?logged_out=1';
+    }, 400);
   }
 
   function initTheme() {
