@@ -361,6 +361,16 @@
           const cleanUrl = window.location.pathname + (redirectParam ? '?redirect=' + encodeURIComponent(redirectParam) : '');
           window.history.replaceState({}, document.title, cleanUrl);
         }
+      } else if (urlParams.get('redirect')) {
+        const target = urlParams.get('redirect').toLowerCase();
+        const msg = target.includes('dashboard')
+          ? 'Private workspace: Please log in to view your dashboard.'
+          : target.includes('create')
+          ? 'Private author workspace: Please log in to compose stories.'
+          : 'Private route: Please log in to access this page.';
+        setTimeout(() => {
+          showToast(msg, 'info');
+        }, 120);
       }
 
       const loginSubmitBtn = document.getElementById('loginSubmitBtn');
@@ -523,7 +533,7 @@
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 300);
-      }, 3000);
+      }, 4500);
     }
   </script>
 
