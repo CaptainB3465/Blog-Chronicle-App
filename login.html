@@ -385,11 +385,12 @@
         setButtonLoading(loginSubmitBtn, true, 'Signing in to Dashboard...');
         try {
           await ChronicleAuth.loginApi(email, pass, loginRemember.checked);
-          setButtonLoading(loginSubmitBtn, true, 'Opening Dashboard...');
-          showToast('Authenticated! Opening Dashboard...', 'success');
+          setButtonLoading(loginSubmitBtn, true, 'Opening Workspace...');
+          showToast('Authenticated! Opening Workspace...', 'success');
+          const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || 'dashboard.html';
           setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 600);
+            window.location.href = redirectTarget;
+          }, 500);
         } catch (err) {
           setButtonLoading(loginSubmitBtn, false, '', 'Sign In to Dashboard');
           showToast(err.message, 'error');
@@ -409,11 +410,12 @@
         setButtonLoading(registerSubmitBtn, true, 'Creating Account...');
         try {
           await ChronicleAuth.registerApi(name, email, pass, role);
-          setButtonLoading(registerSubmitBtn, true, 'Opening Dashboard...');
-          showToast(`Welcome, ${name.split(' ')[0]}! Heading to Dashboard...`, 'success');
+          setButtonLoading(registerSubmitBtn, true, 'Opening Workspace...');
+          showToast(`Welcome, ${name.split(' ')[0]}! Heading to Workspace...`, 'success');
+          const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || 'dashboard.html';
           setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 600);
+            window.location.href = redirectTarget;
+          }, 500);
         } catch (err) {
           setButtonLoading(registerSubmitBtn, false, '', 'Create Account & Go to Dashboard');
           showToast(err.message, 'error');
