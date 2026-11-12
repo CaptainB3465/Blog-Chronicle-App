@@ -1,4 +1,4 @@
-# 🖋️ Chronicle — Full Stack Editorial Web Publication
+# Chronicle — Full Stack Editorial Web Publication
 
 ![Node.js](https://img.shields.io/badge/Node.js-20+-68a063?style=for-the-badge&logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express&logoColor=white)
@@ -11,29 +11,29 @@
 
 ---
 
-## 🚀 Live Demo & Deployment
+## Live Demo & Deployment
 
 - **Vercel Serverless Ready**: Configured with `vercel.json` and `api/index.js` for instant serverless deployment.
 - **GitHub Repository**: [CaptainB3465/Blog-Chronicle-App](https://github.com/CaptainB3465/Blog-Chronicle-App)
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 
-### 1. 📖 Curated Editorial Discovery (`index.html`)
+### 1. Curated Editorial Discovery (`index.html`)
 - **Hero Value Proposition**: High-contrast, typography-first editorial showcase.
 - **Multi-Filter Explorer**: Instant categorization across *Engineering*, *Design*, *AI*, and *Culture*.
 - **Interactive Search & Views**: Dynamic full-text search with instant toggle between Responsive Grid and Detailed List views.
 - **Reading Drawer Overlay**: Quick preview of articles directly from the landing feed without context switching.
 
-### 2. 🔐 Secure Multi-Tenant Authentication (`login.html`)
+### 2.  Secure Multi-Tenant Authentication (`login.html`)
 - **Unified Auth Portal**: Seamless animated tab switcher between **Log In** and **Create Account**.
 - **Cryptographic Security**: Salted password hashing (bcryptjs 10 rounds) and 7-day signed JWT authentication tokens.
 - **Password UX**: Real-time password strength meter, dynamic feedback badges, and visibility toggles.
 - **Protected Route Guards**: Automatically intercepts unauthenticated visits to protected pages (`dashboard.html`, `create-blog.html`), redirects to login with return URLs, and restores target destinations after authentication.
 - **Smooth Animated Logout**: Non-abrupt logout transition with alert toasts and automatic session clearance.
 
-### 3. 📊 Author Studio & Reader Portal (`dashboard.html`)
+### 3. Author Studio & Reader Portal (`dashboard.html`)
 - **Author Studio**:
   - Live editorial metrics: Published stories, claps received, drafts counter, and reader engagement count.
   - Multi-tenant story management: Dedicated `GET /api/blogs/user/me` endpoint ensures authors manage only their own publications.
@@ -46,13 +46,13 @@
   - Secure password update modal with salted bcrypt verification.
   - JWT Session Inspector displaying active token expiration and cryptographic header details.
 
-### 4. ✍️ Distraction-Free Authoring Studio (`create-blog.html`)
+### 4. Distraction-Free Authoring Studio (`create-blog.html`)
 - **Rich Markdown Formatting**: Instant toolbar shortcuts for headings (`H2`, `H3`), bold, italic, blockquotes, code blocks, and bullet lists.
 - **Real-Time Split Preview**: Live Markdown rendering powered by `marked.js` with typographic styling.
 - **Metadata Management**: Category selector, tag chips input, and Unsplash cover image integration with real-time thumbnail preview.
 - **Draft & Publish Workflows**: Save unpublished working copies or publish immediately to the global feed.
 
-### 5. 👓 Immersive Reading Experience (`blog.html`)
+### 5. Immersive Reading Experience (`blog.html`)
 - **Distraction-Free Typography**: Optimized line heights, serif/sans-serif font scales, and dark/light themes.
 - **Interactive Engagement**: Live clap counter with animated particles and dynamic reader comment submissions.
 - **Reader Feedback Portal**: Dedicated modal to submit structured editorial feedback, bug reports, and ratings directly to the author.
@@ -60,7 +60,7 @@
 
 ---
 
-## 🏗️ Architecture & User Journey
+## Architecture & User Journey
 
 ```mermaid
 flowchart TD
@@ -87,7 +87,7 @@ flowchart LR
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
@@ -103,7 +103,7 @@ flowchart LR
 
 ---
 
-## 📡 REST API Reference
+## REST API Reference
 
 ### Authentication Endpoints (`/api/auth`)
 
@@ -182,7 +182,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🚀 Step-by-Step Vercel Deployment Guide
+##  Step-by-Step Vercel Deployment Guide
 
 Deploying Chronicle to Vercel takes under 2 minutes:
 
