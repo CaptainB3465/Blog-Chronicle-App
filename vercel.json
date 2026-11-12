@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/create-blog", "destination": "/create-blog.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/register", "destination": "/login.html" },
+    { "source": "/blog", "destination": "/blog.html" }
+  ]
+}

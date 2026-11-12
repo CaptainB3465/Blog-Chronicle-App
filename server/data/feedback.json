@@ -1,0 +1,50 @@
+[
+  {
+    "id": "fb-001",
+    "blogId": "a0000001-0000-4000-8000-000000000001",
+    "blogTitle": "Architecting High-Throughput Event Streams with Zero Data Loss",
+    "authorId": "11111111-1111-4111-8111-111111111111",
+    "authorName": "Sarah Jenkins",
+    "clientId": "44444444-4444-4444-8444-444444444444",
+    "clientName": "David Miller",
+    "clientAvatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80",
+    "type": "Technical Review",
+    "rating": 5,
+    "message": "Outstanding breakdown of log-structured storage engines and partition-aware consumers. Would love to see an addendum comparing Raft with Paxos in high latency cross-datacenter deployments.",
+    "status": "Reviewed",
+    "authorReply": "Thank you David! An upcoming dispatch will delve deep into WAN latency benchmarks for Raft vs EPaxos.",
+    "createdAt": "2026-11-05T14:20:00.000Z"
+  },
+  {
+    "id": "fb-002",
+    "blogId": "a0000002-0000-4000-8000-000000000002",
+    "blogTitle": "Designing Beyond Flat Surfaces: The Evolution of Spatial Micro-Interactions",
+    "authorId": "22222222-2222-4222-8222-222222222222",
+    "authorName": "Marcus Chen",
+    "clientId": "44444444-4444-4444-8444-444444444444",
+    "clientName": "David Miller",
+    "clientAvatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80",
+    "type": "Editorial Suggestion",
+    "rating": 4,
+    "message": "The contrast and spring damping guidelines in section 3 are brilliant. Could you provide a concrete Figma token example or CSS spring formula in the next iteration?",
+    "status": "Pending",
+    "authorReply": null,
+    "createdAt": "2026-11-08T09:15:00.000Z"
+  },
+  {
+    "id": "fb-003",
+    "blogId": "6d69ca9e-0e82-42f3-a87d-a3a2f9aea79d",
+    "blogTitle": "he Art of User Experience: Why Great Design Goes Beyond Looks",
+    "authorId": "fd22ebea-9df6-4357-a903-b213d2a093df",
+    "authorName": "Brian Munyua",
+    "clientId": "44444444-4444-4444-8444-444444444444",
+    "clientName": "David Miller",
+    "clientAvatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80",
+    "type": "Praise & Appreciation",
+    "rating": 5,
+    "message": "The 5 principles of UX design are concise, actionable, and straight to the point. Great read for junior designers and product managers alike!",
+    "status": "Reviewed",
+    "authorReply": "Appreciate the feedback, David! Happy to hear it resonates with your team.",
+    "createdAt": "2026-11-12T10:00:00.000Z"
+  }
+]

@@ -3,19 +3,30 @@ const path = require('path');
 const crypto = require('crypto');
 const supabase = require('./config/supabase');
 
-const DATA_DIR = path.join(__dirname, 'data');
+const SEED_DIR = path.join(__dirname, 'data');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DATA_DIR = isServerless ? path.join('/tmp', 'chronicle_data') : SEED_DIR;
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const BLOGS_FILE = path.join(DATA_DIR, 'blogs.json');
 
 // Ensure data directory and files exist
 if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+    try {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+    } catch (e) {}
 }
 
 function readJson(filePath, fallback = []) {
     try {
         if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2));
+            const filename = path.basename(filePath);
+            const seedPath = path.join(SEED_DIR, filename);
+            if (fs.existsSync(seedPath)) {
+                const data = fs.readFileSync(seedPath, 'utf8');
+                try { fs.writeFileSync(filePath, data, 'utf8'); } catch (e) {}
+                return JSON.parse(data);
+            }
+            try { fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2), 'utf8'); } catch (e) {}
             return fallback;
         }
         const data = fs.readFileSync(filePath, 'utf8');
@@ -28,9 +39,9 @@ function readJson(filePath, fallback = []) {
 
 function writeJson(filePath, data) {
     try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
     } catch (e) {
-        console.error(`Error writing ${filePath}:`, e.message);
+        console.warn(`File write notice for ${filePath}:`, e.message);
     }
 }
 

@@ -72,10 +72,6 @@ var ChronicleAuth = (function () {
     return saveSession(data, true);
   }
 
-  async function loginDemoAuthor() {
-    return await loginApi('sarah@chronicle.local', 'password123', true);
-  }
-
   function login(email, password, remember = true) {
     return loginApi(email, password, remember);
   }
@@ -321,7 +317,6 @@ var ChronicleAuth = (function () {
     getUser,
     login,
     register,
-    loginDemoAuthor,
     loginApi,
     registerApi,
     apiFetch,

@@ -5,13 +5,19 @@ const crypto = require('crypto');
 const db = require('../db');
 
 const router = express.Router();
-const FEEDBACK_FILE = path.join(__dirname, '..', 'data', 'feedback.json');
-const BLOGS_FILE = path.join(__dirname, '..', 'data', 'blogs.json');
+const SEED_FILE = path.join(__dirname, '..', 'data', 'feedback.json');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const FEEDBACK_FILE = isServerless ? path.join('/tmp', 'feedback.json') : SEED_FILE;
 
 function readFeedback() {
     try {
         if (!fs.existsSync(FEEDBACK_FILE)) {
-            fs.writeFileSync(FEEDBACK_FILE, '[]', 'utf8');
+            if (fs.existsSync(SEED_FILE)) {
+                const seedData = fs.readFileSync(SEED_FILE, 'utf8');
+                try { fs.writeFileSync(FEEDBACK_FILE, seedData, 'utf8'); } catch (e) {}
+                return JSON.parse(seedData);
+            }
+            try { fs.writeFileSync(FEEDBACK_FILE, '[]', 'utf8'); } catch (e) {}
             return [];
         }
         const data = fs.readFileSync(FEEDBACK_FILE, 'utf8');
@@ -26,7 +32,7 @@ function writeFeedback(list) {
     try {
         fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(list, null, 2), 'utf8');
     } catch (e) {
-        console.error('Error writing feedback file:', e.message);
+        console.warn('Feedback write notice:', e.message);
     }
 }
 

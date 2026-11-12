@@ -80,13 +80,15 @@
 
       <!-- Center: Role Switcher / View Toggle -->
       <div class="flex items-center bg-[var(--bg-subtle)] p-1 rounded-full border border-[var(--border-subtle)] shadow-xs">
-        <button id="viewToggleAuthor" type="button" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-xs cursor-pointer">
+        <button id="viewToggleAuthor" type="button" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-xs cursor-pointer">
           <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
-          <span>Author Studio</span>
+          <span class="hidden sm:inline">Author Studio</span>
+          <span class="sm:hidden">Author</span>
         </button>
-        <button id="viewToggleClient" type="button" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer">
+        <button id="viewToggleClient" type="button" class="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer">
           <i data-lucide="users" class="w-3.5 h-3.5"></i>
-          <span>Client Portal</span>
+          <span class="hidden sm:inline">Client Portal</span>
+          <span class="sm:hidden">Client</span>
         </button>
       </div>
 
@@ -139,10 +141,6 @@
           <button type="button" id="openProfileModalBtn" class="px-3.5 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer flex items-center gap-1.5" title="View & Edit Profile">
             <i data-lucide="user-cog" class="w-4 h-4 text-[var(--accent-primary)]"></i>
             <span>Edit Profile</span>
-          </button>
-          <button type="button" id="switchUserQuickBtn" class="px-3.5 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer flex items-center gap-1.5" title="Switch Demo Account">
-            <i data-lucide="user-check" class="w-4 h-4 text-[var(--accent-primary)]"></i>
-            <span id="switchUserBtnText">Switch Account</span>
           </button>
           <a href="create-blog.html" id="dashPrimaryActionBtn" class="px-4 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5">
             <i data-lucide="square-pen" class="w-4 h-4"></i>
@@ -719,8 +717,6 @@
       const dashRoleBadge = document.getElementById('dashRoleBadge');
       const currentViewBadge = document.getElementById('currentViewBadge');
       const dashRoleDescription = document.getElementById('dashRoleDescription');
-      const switchUserQuickBtn = document.getElementById('switchUserQuickBtn');
-      const switchUserBtnText = document.getElementById('switchUserBtnText');
       const dashPrimaryActionBtn = document.getElementById('dashPrimaryActionBtn');
       const dashPrimaryActionText = document.getElementById('dashPrimaryActionText');
 
@@ -743,12 +739,6 @@
         dashRoleBadge.className = isUserClient
           ? 'text-xs px-2.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
           : 'text-xs px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/60 text-[var(--accent-primary)] font-bold';
-
-        if (isUserClient) {
-          switchUserBtnText.textContent = 'Switch to Author (Sarah)';
-        } else {
-          switchUserBtnText.textContent = 'Switch to Client (David)';
-        }
       }
 
       syncUserProfileUI();
@@ -830,30 +820,6 @@
             refreshData();
           } catch (err) {
             showToast('Could not update profile: ' + err.message, 'error');
-          }
-        });
-      }
-
-      // Quick Switch Account between Sarah (Author) and David (Client)
-      if (switchUserQuickBtn) {
-        switchUserQuickBtn.addEventListener('click', async () => {
-          const isUserClient = (currentUser.role || '').toLowerCase().includes('client') ||
-                               (currentUser.role || '').toLowerCase().includes('reader');
-          try {
-            if (isUserClient) {
-              await ChronicleAuth.loginApi('sarah@chronicle.local', 'password123', true);
-              showToast('Switched to Author profile (Sarah Jenkins)', 'success');
-            } else {
-              await ChronicleAuth.loginApi('david@chronicle.local', 'password123', true);
-              showToast('Switched to Client profile (David Miller)', 'success');
-            }
-            currentUser = ChronicleAuth.getUser();
-            currentView = (currentUser.role || '').toLowerCase().includes('client') ? 'client' : 'author';
-            syncUserProfileUI();
-            setView(currentView);
-            refreshData();
-          } catch (e) {
-            showToast('Could not switch account: ' + e.message, 'error');
           }
         });
       }

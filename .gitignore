@@ -153,5 +153,4 @@ vite.config.ts.timestamp-*
 .vscode/
 .idea/
 
-server/data/
 .env

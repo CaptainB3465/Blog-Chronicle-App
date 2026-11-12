@@ -41,4 +41,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error.' });
 });
 
-app.listen(PORT, () => console.log(`Chronicle server running at http://localhost:${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Chronicle server running at http://localhost:${PORT}`));
+}
+
+module.exports = app;
