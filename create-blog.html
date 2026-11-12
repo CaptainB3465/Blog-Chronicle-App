@@ -472,16 +472,13 @@
         if (body.startsWith('<')) formattedContent += body;
         else formattedContent += `<p>${body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
 
-        // Persist to backend (auto-signs in demo author if guest)
+        // Require real authentication token before publishing
         if (!ChronicleAuth.getToken()) {
-          try {
-            await ChronicleAuth.loginDemoAuthor();
-            showToast('Signed in as Demo Author for publishing.', 'info');
-          } catch (e) {
-            showToast('Please log in to publish.', 'error');
-            setTimeout(() => { window.location.href = 'login.html'; }, 900);
-            return;
-          }
+          showToast('Authentication required: Please log in to publish stories.', 'error');
+          setTimeout(() => {
+            window.location.href = 'login.html?redirect=' + encodeURIComponent('create-blog.html');
+          }, 800);
+          return;
         }
 
         publishBtn.disabled = true;

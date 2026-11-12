@@ -6,9 +6,12 @@ var ChronicleAuth = (function () {
   const STORAGE_KEY = 'chronicle_active_session_v3';
   const THEME_KEY = 'chronicle_theme_v2';
 
-  // Get current session or null (guest)
+  // Get current session or null (requires valid signed JWT token)
   function getUser() {
     try {
+      const token = getToken();
+      if (!token) return null;
+
       const stored = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -70,77 +73,15 @@ var ChronicleAuth = (function () {
   }
 
   async function loginDemoAuthor() {
-    try {
-      return await loginApi('sarah@chronicle.local', 'password123', true);
-    } catch (e) {
-      const demoUser = {
-        id: '11111111-1111-4111-8111-111111111111',
-        name: 'Sarah Jenkins',
-        email: 'sarah@chronicle.local',
-        role: 'Principal Systems Architect',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
-        isLoggedIn: true,
-        loginTime: new Date().toISOString()
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(demoUser));
-      updateNavUI();
-      updatePageAuthElements();
-      return demoUser;
-    }
+    return await loginApi('sarah@chronicle.local', 'password123', true);
   }
 
   function login(email, password, remember = true) {
-    const cleanEmail = email.trim().toLowerCase();
-    const derivedName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    
-    // Check if user previously registered with a name
-    const existingProfiles = JSON.parse(localStorage.getItem('chronicle_registered_users') || '{}');
-    const existing = existingProfiles[cleanEmail];
-
-    const user = {
-      id: existing ? existing.id : 'usr_' + Date.now(),
-      name: existing ? existing.name : derivedName,
-      email: cleanEmail,
-      role: existing ? existing.role : 'Contributing Author',
-      avatar: existing && existing.avatar ? existing.avatar : generateAvatar(existing ? existing.name : derivedName),
-      isLoggedIn: true,
-      loginTime: new Date().toISOString()
-    };
-
-    if (remember) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    } else {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    }
-
-    updateNavUI();
-    updatePageAuthElements();
-    return user;
+    return loginApi(email, password, remember);
   }
 
   function register(name, email, password, role) {
-    const cleanName = name.trim();
-    const cleanEmail = email.trim().toLowerCase();
-    const user = {
-      id: 'usr_' + Date.now(),
-      name: cleanName,
-      email: cleanEmail,
-      role: role || 'Author & Contributor',
-      avatar: generateAvatar(cleanName),
-      isLoggedIn: true,
-      createdAt: new Date().toISOString()
-    };
-
-    // Store in registered users directory
-    const existingProfiles = JSON.parse(localStorage.getItem('chronicle_registered_users') || '{}');
-    existingProfiles[cleanEmail] = user;
-    localStorage.setItem('chronicle_registered_users', JSON.stringify(existingProfiles));
-
-    // Active session
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    updateNavUI();
-    updatePageAuthElements();
-    return user;
+    return registerApi(name, email, password, role);
   }
 
   function showToastNotification(message, type = 'info') {

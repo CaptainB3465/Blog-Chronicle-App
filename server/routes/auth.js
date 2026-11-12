@@ -95,9 +95,9 @@ router.post('/login', async (req, res, next) => {
         }
 
         const cleanPass = String(password);
-        const isDemo = cleanEmail.endsWith('@chronicle.local');
-        const isPasswordMatch = (isDemo && (cleanPass === 'password123' || cleanPass === 'password')) ||
-            (user.passwordHash && await bcrypt.compare(cleanPass, user.passwordHash));
+        const isPasswordMatch = Boolean(
+            user.passwordHash && await bcrypt.compare(cleanPass, user.passwordHash)
+        );
 
         if (!isPasswordMatch) {
             console.warn(`[AUTH] Login failed: Password mismatch for ${cleanEmail}`);
