@@ -119,6 +119,25 @@
               <span>Sign In to Dashboard</span>
               <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
+
+            <!-- Quick Demo Role Switches for Instant Testing -->
+            <div class="pt-4 border-t border-[var(--border-subtle)] space-y-2">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] text-center">Quick One-Click Test Accounts</p>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="demoAuthorBtn" class="px-2.5 py-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer" title="sarah@chronicle.local">
+                  <span>✍️ Sarah (Author)</span>
+                </button>
+                <button type="button" id="demoClientBtn" class="px-2.5 py-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer" title="david@chronicle.local">
+                  <span>👤 David (Client)</span>
+                </button>
+                <button type="button" id="supabaseSharonBtn" class="px-2.5 py-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-emerald-500/30 text-xs font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer" title="test@example.com (Supabase)">
+                  <span>⚡ Sharon (Supabase)</span>
+                </button>
+                <button type="button" id="supabaseBrianBtn" class="px-2.5 py-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-emerald-500/30 text-xs font-semibold text-[var(--text-primary)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer" title="pentester@gmail.com (Supabase)">
+                  <span>⚡ Brian (Supabase)</span>
+                </button>
+              </div>
+            </div>
           </form>
 
           <div class="mt-6 pt-5 border-t border-[var(--border-subtle)] text-center">
@@ -152,14 +171,13 @@
             </div>
 
             <div>
-              <label for="regRole" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Primary Domain / Role</label>
+              <label for="regRole" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Account Type & Role</label>
               <select id="regRole" class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-sm outline-none focus:border-[var(--accent-primary)] transition-colors">
-                <option value="Staff Software Engineer">Staff Software Engineer</option>
-                <option value="Design Systems Architect">Design Systems Architect</option>
-                <option value="AI & ML Researcher">AI & ML Researcher</option>
-                <option value="Independent Founder">Independent Founder</option>
-                <option value="Product & UX Strategist">Product & UX Strategist</option>
-                <option value="Technical Writer">Technical Writer</option>
+                <option value="Author">Author (Publish Stories & Manage Dispatches)</option>
+                <option value="Client">Client (Read Stories, Review & Leave Feedback)</option>
+                <option value="Staff Software Engineer">Staff Software Engineer (Author)</option>
+                <option value="Design Systems Architect">Design Systems Architect (Author)</option>
+                <option value="Technical Reviewer">Technical Reviewer (Client)</option>
               </select>
             </div>
 
@@ -402,15 +420,82 @@
         }
       });
 
-      // Forgot password trigger
+      // Forgot password trigger & modal
+      const resetModal = document.getElementById('resetPasswordModal');
+      const resetEmail = document.getElementById('resetEmail');
+      const resetNewPass = document.getElementById('resetNewPass');
+      const resetForm = document.getElementById('resetPasswordForm');
+      const cancelResetBtn = document.getElementById('cancelResetBtn');
+
       document.getElementById('forgotBtn').addEventListener('click', () => {
-        const email = loginEmail.value.trim();
-        if (!email) {
-          showToast('Please type your email address first.', 'error');
-        } else {
-          showToast(`Password reset link sent to ${email}`, 'info');
+        resetEmail.value = loginEmail.value.trim();
+        resetNewPass.value = '';
+        resetModal.classList.remove('hidden');
+        if (!resetEmail.value) resetEmail.focus();
+        else resetNewPass.focus();
+      });
+
+      cancelResetBtn.addEventListener('click', () => {
+        resetModal.classList.add('hidden');
+      });
+
+      resetForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const em = resetEmail.value.trim();
+        const np = resetNewPass.value;
+        if (!em || !np) return;
+
+        try {
+          const res = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: em, newPassword: np })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Failed to update password');
+          resetModal.classList.add('hidden');
+          loginEmail.value = em;
+          loginPassword.value = np;
+          showToast('Password updated! You can now sign in.', 'success');
+        } catch (err) {
+          showToast(err.message, 'error');
         }
       });
+
+      // Quick Demo & Supabase account auto-fillers
+      const demoAuthorBtn = document.getElementById('demoAuthorBtn');
+      const demoClientBtn = document.getElementById('demoClientBtn');
+      const supabaseSharonBtn = document.getElementById('supabaseSharonBtn');
+      const supabaseBrianBtn = document.getElementById('supabaseBrianBtn');
+
+      if (demoAuthorBtn) {
+        demoAuthorBtn.addEventListener('click', () => {
+          loginEmail.value = 'sarah@chronicle.local';
+          loginPassword.value = 'password123';
+          loginForm.dispatchEvent(new Event('submit'));
+        });
+      }
+      if (demoClientBtn) {
+        demoClientBtn.addEventListener('click', () => {
+          loginEmail.value = 'david@chronicle.local';
+          loginPassword.value = 'password123';
+          loginForm.dispatchEvent(new Event('submit'));
+        });
+      }
+      if (supabaseSharonBtn) {
+        supabaseSharonBtn.addEventListener('click', () => {
+          loginEmail.value = 'test@example.com';
+          loginPassword.value = 'password123';
+          loginForm.dispatchEvent(new Event('submit'));
+        });
+      }
+      if (supabaseBrianBtn) {
+        supabaseBrianBtn.addEventListener('click', () => {
+          loginEmail.value = 'pentester@gmail.com';
+          loginPassword.value = 'password123';
+          loginForm.dispatchEvent(new Event('submit'));
+        });
+      }
     });
 
     function showToast(message, type = 'info') {
@@ -428,5 +513,27 @@
       }, 3000);
     }
   </script>
+
+  <!-- Reset Password Modal -->
+  <div id="resetPasswordModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden">
+    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative">
+      <h3 class="text-lg font-bold font-serif-reading text-[var(--text-primary)] mb-2">Reset Account Password</h3>
+      <p class="text-xs text-[var(--text-muted)] mb-4">Set a new password (min 8 characters). Updates your credentials in Supabase and local cache.</p>
+      <form id="resetPasswordForm" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">Account Email</label>
+          <input type="email" id="resetEmail" required placeholder="user@example.com" class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] transition-colors">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1">New Password</label>
+          <input type="password" id="resetNewPass" required minlength="8" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] transition-colors">
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3">
+          <button type="button" id="cancelResetBtn" class="px-3 py-2 rounded-xl text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-bold hover:bg-[var(--accent-primary-hover)] transition-colors shadow-xs">Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>

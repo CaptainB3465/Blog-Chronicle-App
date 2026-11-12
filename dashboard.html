@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Author Dashboard — Chronicle</title>
-  <meta name="description" content="Personal author dashboard to manage stories, review readership analytics, track drafts, and engage with community responses.">
+  <title>Workspace Dashboard — Chronicle</title>
+  <meta name="description" content="Dedicated workspace for Chronicle Authors and Clients. Manage publications, explore author dispatches, and exchange technical reviews and editorial feedback.">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -35,47 +35,68 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- Top Navigation Bar -->
+  <!-- Dedicated Internal Workspace Top Strip -->
+  <div class="w-full bg-[var(--text-primary)] text-[var(--bg-primary)] px-4 sm:px-8 py-1.5 text-[11px] flex items-center justify-between font-mono border-b border-[var(--border-subtle)]">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      <span class="font-bold tracking-wider uppercase text-[10px]">Internal Workspace</span>
+      <span class="opacity-40">•</span>
+      <span id="topBarUserRole" class="opacity-80 text-[10px]">Author Studio Console</span>
+    </div>
+    <div class="flex items-center gap-4 text-[10px]">
+      <a href="index.html" class="flex items-center gap-1 hover:underline text-orange-400 font-sans font-semibold">
+        <i data-lucide="arrow-left" class="w-3 h-3"></i>
+        <span>Exit to Public Publication</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TOP APPLICATION WORKSPACE HEADER
+       (Distinct application workspace header)
+       ============================================================ -->
   <header class="sticky top-0 z-40 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/95 backdrop-blur-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
       
-      <!-- Brand Logo -->
+      <!-- Brand Logo & Workspace Tag -->
       <div class="flex items-center gap-3">
-        <a href="index.html" class="flex items-center gap-2.5 group">
-          <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#c95123] to-[#f59e0b] flex items-center justify-center text-white shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
-            <i data-lucide="feather" class="w-5 h-5"></i>
+        <a href="dashboard.html" class="flex items-center gap-2.5 group">
+          <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#c95123] to-[#f59e0b] flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
           </span>
           <div>
-            <span class="text-xl sm:text-2xl font-extrabold tracking-tight font-serif-reading">CHRONICLE</span>
-            <span class="hidden sm:inline-block text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 ml-1.5 rounded bg-[var(--accent-surface)] text-[var(--accent-primary)]">Dashboard</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xl sm:text-2xl font-extrabold tracking-tight font-serif-reading">CHRONICLE</span>
+              <span class="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-[var(--text-primary)] text-[var(--bg-primary)]" id="headerRoleBadge">Workspace</span>
+            </div>
           </div>
+        </a>
+        <a href="index.html" class="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] border border-[var(--border-subtle)] transition-colors">
+          <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+          <span>Public Site</span>
         </a>
       </div>
 
-      <!-- Center Links -->
-      <nav class="hidden md:flex items-center gap-6 text-xs font-semibold text-[var(--text-secondary)]">
-        <a href="index.html#stories" class="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
-          <i data-lucide="newspaper" class="w-4 h-4"></i>
-          <span>Articles Feed</span>
-        </a>
-        <a href="dashboard.html" class="text-[var(--accent-primary)] font-bold flex items-center gap-1.5">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-          <span>Dashboard</span>
-        </a>
-        <a href="create-blog.html" class="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
-          <i data-lucide="square-pen" class="w-4 h-4"></i>
-          <span>Create Story</span>
-        </a>
-      </nav>
+      <!-- Center: Role Switcher / View Toggle -->
+      <div class="flex items-center bg-[var(--bg-subtle)] p-1 rounded-full border border-[var(--border-subtle)] shadow-xs">
+        <button id="viewToggleAuthor" type="button" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-xs cursor-pointer">
+          <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
+          <span>Author Studio</span>
+        </button>
+        <button id="viewToggleClient" type="button" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i>
+          <span>Client Portal</span>
+        </button>
+      </div>
 
-      <!-- Right Actions & User Slot -->
+      <!-- Right Actions & Dynamic User Slot -->
       <div class="flex items-center gap-3">
-        <button data-theme-toggle aria-label="Toggle theme" class="p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors">
+        <button data-theme-toggle aria-label="Toggle theme" class="p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors cursor-pointer">
           <i data-lucide="moon" data-theme-icon class="w-5 h-5"></i>
         </button>
 
-        <a href="create-blog.html" class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all">
-          <i data-lucide="plus" class="w-4 h-4"></i>
+        <a href="create-blog.html" id="headerWriteBtn" class="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
           <span>Write Story</span>
         </a>
 
@@ -86,434 +107,1571 @@
     </div>
   </header>
 
-  <!-- Main Dashboard Content Wrap -->
+  <!-- Main Dashboard Workspace -->
   <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
     
-    <!-- AUTHOR PROFILE HEADER BANNER -->
+    <!-- ============================================================
+         PROFILE & WORKSPACE STATUS BANNER
+         ============================================================ -->
     <section class="p-6 sm:p-8 rounded-3xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-md mb-8">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         
         <div class="flex items-center gap-4 sm:gap-6">
           <div class="relative">
-            <img id="dashAvatar" src="https://ui-avatars.com/api/?name=Author&background=c95123&color=fff&size=128" alt="Author Avatar" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[var(--border-subtle)] shadow-md">
-            <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[var(--bg-surface)] flex items-center justify-center text-white text-[10px]">
+            <img id="dashAvatar" src="https://ui-avatars.com/api/?name=User&background=c95123&color=fff&size=128" alt="Profile Avatar" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[var(--border-subtle)] shadow-md">
+            <span id="roleIndicatorDot" class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[var(--bg-surface)] flex items-center justify-center text-white text-[10px]">
               <i data-lucide="check" class="w-3 h-3"></i>
             </span>
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <h1 id="dashName" class="text-xl sm:text-2xl font-extrabold font-serif-reading text-[var(--text-primary)]">Author Profile</h1>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold">Active Member</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 id="dashName" class="text-xl sm:text-2xl font-extrabold font-serif-reading text-[var(--text-primary)]">User Profile</h1>
+              <span id="dashRoleBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/60 text-[var(--accent-primary)] font-bold">Author</span>
+              <span id="currentViewBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] font-medium border border-[var(--border-subtle)]">Viewing: Author Studio</span>
             </div>
-            <p id="dashRole" class="text-xs sm:text-sm text-[var(--text-muted)] mt-0.5">Contributing Author</p>
-            <p id="dashEmail" class="text-xs text-[var(--text-secondary)] mt-1 font-mono">author@example.com</p>
+            <p id="dashEmail" class="text-xs text-[var(--text-secondary)] mt-1 font-mono">user@chronicle.local</p>
+            <p id="dashRoleDescription" class="text-xs sm:text-sm text-[var(--text-muted)] mt-1">Publish dispatches, track readership performance, and review feedback from clients.</p>
           </div>
         </div>
 
         <div class="flex items-center gap-3 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-0 border-[var(--border-subtle)]">
-          <a href="create-blog.html" class="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2">
-            <i data-lucide="pen-tool" class="w-4 h-4"></i>
-            <span>Create New Blog</span>
-          </a>
-          <button type="button" data-auth-logout class="px-4 py-2.5 rounded-xl border border-[var(--border-medium)] hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-bold transition-colors cursor-pointer">
-            Log Out
+          <button type="button" id="switchUserQuickBtn" class="px-3.5 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer flex items-center gap-1.5" title="Switch Demo Account">
+            <i data-lucide="user-check" class="w-4 h-4 text-[var(--accent-primary)]"></i>
+            <span id="switchUserBtnText">Switch to Client (David)</span>
           </button>
+          <a href="create-blog.html" id="dashPrimaryActionBtn" class="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2">
+            <i data-lucide="square-pen" class="w-4 h-4"></i>
+            <span id="dashPrimaryActionText">New Story</span>
+          </a>
         </div>
 
       </div>
     </section>
 
-    <!-- METRICS & ANALYTICS OVERVIEW -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+    <!-- ============================================================
+         1. AUTHOR DASHBOARD VIEW CONTAINER
+         ============================================================ -->
+    <div id="authorDashboardSection">
       
-      <!-- Card 1: Stories Published -->
-      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
-        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
-          <span>Published Dispatches</span>
-          <span class="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-950 text-[var(--accent-primary)]">
-            <i data-lucide="book-open" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashPublishedCount">0</div>
-        <div class="mt-2 text-[11px] text-[var(--text-muted)]">
-          <span>Live on publication</span>
-        </div>
-      </div>
-
-      <!-- Card 2: Claps Received -->
-      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
-        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
-          <span>Appreciations & Claps</span>
-          <span class="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-500">
-            <i data-lucide="heart" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashTotalClaps">0</div>
-        <div class="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-          <i data-lucide="sparkles" class="w-3 h-3"></i>
-          <span>Reader engagement</span>
-        </div>
-      </div>
-
-      <!-- Card 3: Saved Drafts -->
-      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
-        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
-          <span>Unpublished Drafts</span>
-          <span class="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-600">
-            <i data-lucide="file-edit" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashDraftCount">0</div>
-        <div class="mt-2 text-[11px] text-[var(--text-muted)]">
-          <span>Auto-saved in studio</span>
-        </div>
-      </div>
-
-      <!-- Card 4: Community Discourse -->
-      <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
-        <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
-          <span>Reader Responses</span>
-          <span class="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600">
-            <i data-lucide="message-square" class="w-4 h-4"></i>
-          </span>
-        </div>
-        <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="dashCommentsCount">0</div>
-        <div class="mt-2 text-[11px] text-[var(--text-muted)]">
-          <span>Community feedback</span>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- CONTENT 2-COLUMN SECTION -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      
-      <!-- LEFT 8 COLS: Stories Management Table / Feed -->
-      <div class="lg:col-span-8 space-y-6">
+      <!-- AUTHOR METRICS -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
         
-        <!-- Tabs Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
-          <div class="flex items-center gap-3 text-xs font-bold">
-            <button id="tabPublishedBtn" class="dash-tab active px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)]">
-              My Published Dispatches (<span id="tabPublishedCount">0</span>)
-            </button>
-            <button id="tabDraftsBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-              Saved Drafts (<span id="tabDraftsBadge">0</span>)
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>My Published Dispatches</span>
+            <span class="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-950 text-[var(--accent-primary)]">
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="authorPublishedCount">0</div>
+          <div class="mt-2 text-[11px] text-[var(--text-muted)]">Live on Chronicle publication</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>Appreciations & Claps</span>
+            <span class="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-500">
+              <i data-lucide="heart" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="authorTotalClaps">0</div>
+          <div class="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+            <i data-lucide="sparkles" class="w-3 h-3"></i>
+            <span>Reader engagement</span>
+          </div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>Client Feedback Received</span>
+            <span class="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600">
+              <i data-lucide="message-square-quote" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="authorFeedbackCount">0</div>
+          <div class="mt-2 text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
+            <span id="authorPendingFeedbackCount">0</span> pending review
+          </div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>Unpublished Drafts</span>
+            <span class="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-600">
+              <i data-lucide="file-edit" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="authorDraftCount">0</div>
+          <div class="mt-2 text-[11px] text-[var(--text-muted)]">Auto-saved in studio scratchpad</div>
+        </div>
+
+      </section>
+
+      <!-- AUTHOR WORKSPACE 2-COLUMN -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left 8 Cols: Stories & Feedback Tabs -->
+        <div class="lg:col-span-8 space-y-6">
+          
+          <!-- Tab Navigation -->
+          <div class="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-bold">
+              <button id="authorTabStoriesBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer">
+                My Dispatches (<span id="authorTabStoriesCount">0</span>)
+              </button>
+              <button id="authorTabFeedbackBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer">
+                Client Feedback (<span id="authorTabFeedbackBadge">0</span>)
+              </button>
+              <button id="authorTabDraftsBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer">
+                Saved Drafts (<span id="authorTabDraftsBadge">0</span>)
+              </button>
+            </div>
+            <a href="create-blog.html" class="text-xs text-[var(--accent-primary)] font-bold hover:underline flex items-center gap-1">
+              <span>+ Write new</span>
+            </a>
+          </div>
+
+          <!-- Author Filter Bar (Search + Category) -->
+          <div id="authorFilterBar" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-1">
+              <i data-lucide="search" class="w-4 h-4 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" id="authorSearchInput" placeholder="Filter my dispatches by title, tag, or excerpt..." class="w-full pl-9 pr-3.5 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+            </div>
+            <select id="authorCategoryFilter" class="px-3.5 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+              <option value="All Stories">All Categories</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Design & UX">Design & UX</option>
+              <option value="AI & Futures">AI & Futures</option>
+              <option value="Culture">Culture</option>
+              <option value="Founder Notes">Founder Notes</option>
+              <option value="Productivity">Productivity</option>
+            </select>
+          </div>
+
+          <!-- Tab Content 1: Author Dispatches List -->
+          <div id="authorStoriesContainer" class="space-y-4">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Tab Content 2: Client Feedback Received List -->
+          <div id="authorFeedbackContainer" class="hidden space-y-4">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Tab Content 3: Saved Drafts List -->
+          <div id="authorDraftsContainer" class="hidden space-y-4">
+            <!-- Rendered by JS -->
+          </div>
+
+        </div>
+
+        <!-- Right 4 Cols: Studio Scratchpad & Editorial Tools -->
+        <aside class="lg:col-span-4 space-y-6">
+          
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-[#c95123] to-[#8e3412] text-white shadow-md">
+            <h3 class="font-bold text-base font-serif-reading mb-1">Author Studio Tools</h3>
+            <p class="text-xs text-orange-100/90 leading-relaxed mb-4">
+              Compose in-depth technical analysis, add syntax-highlighted code snippets, and review live reader feedback.
+            </p>
+            <a href="create-blog.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-orange-950 font-bold text-xs uppercase tracking-wider hover:bg-orange-50 transition-colors">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i>
+              <span>Create New Dispatch</span>
+            </a>
+          </div>
+
+          <!-- Idea Scratchpad -->
+          <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-[var(--text-primary)] mb-2">Quick Draft Scratchpad</h3>
+            <p class="text-xs text-[var(--text-muted)] mb-3">Capture quick notes or a draft premise before your next release.</p>
+            <textarea id="authorScratchpadText" rows="4" placeholder="Jot down a thesis or talking points..." class="w-full p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] resize-none"></textarea>
+            <button id="saveAuthorScratchpadBtn" class="mt-3 w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors cursor-pointer">
+              Save to Drafts
             </button>
           </div>
-          <a href="create-blog.html" class="text-xs text-[var(--accent-primary)] font-bold hover:underline flex items-center gap-1">
-            <span>+ Write new</span>
-          </a>
-        </div>
 
-        <!-- Stories Container -->
-        <div id="authorStoriesList" class="space-y-4">
-          <!-- Injected via JS -->
-        </div>
+          <!-- Feedback Guidelines Card -->
+          <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+            <div class="flex items-center gap-2 mb-2">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">Client Review Cycle</h4>
+            </div>
+            <p class="text-xs text-[var(--text-muted)] leading-relaxed">
+              When clients leave technical reviews or editorial feedback, reply to acknowledge improvements. This builds readership trust and technical authority.
+            </p>
+          </div>
 
-        <!-- Drafts Container (Hidden by default) -->
-        <div id="authorDraftsList" class="hidden space-y-4">
-          <!-- Injected via JS -->
-        </div>
+        </aside>
 
       </div>
 
-      <!-- RIGHT 4 COLS: Quick Scratchpad & Tips -->
-      <aside class="lg:col-span-4 space-y-6">
+    </div>
+
+    <!-- ============================================================
+         2. CLIENT DASHBOARD VIEW CONTAINER
+         ============================================================ -->
+    <div id="clientDashboardSection" class="hidden">
+      
+      <!-- CLIENT METRICS -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
         
-        <!-- Quick Action Card -->
-        <div class="p-6 rounded-2xl bg-gradient-to-br from-[#c95123] to-[#8e3412] text-white shadow-md">
-          <h3 class="font-bold text-base font-serif-reading mb-1">Ready to share an insight?</h3>
-          <p class="text-xs text-orange-100/90 leading-relaxed mb-4">
-            The Chronicle Studio offers distraction-free writing, Markdown tools, and live editorial preview.
-          </p>
-          <a href="create-blog.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-orange-950 font-bold text-xs uppercase tracking-wider hover:bg-orange-50 transition-colors">
-            <i data-lucide="plus-circle" class="w-4 h-4"></i>
-            <span>Create New Post</span>
-          </a>
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>Author Dispatches Available</span>
+            <span class="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-600">
+              <i data-lucide="newspaper" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="clientStoriesCount">0</div>
+          <div class="mt-2 text-[11px] text-[var(--text-muted)]">Across all publications</div>
         </div>
 
-        <!-- Quick Idea Scratchpad -->
-        <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
-          <h3 class="font-bold text-xs uppercase tracking-wider text-[var(--text-primary)] mb-2">Quick Draft Scratchpad</h3>
-          <p class="text-xs text-[var(--text-muted)] mb-3">Jot down a fleeting thesis before you forget it.</p>
-          <textarea id="quickScratchpad" rows="4" placeholder="Type your idea or thesis here..." class="w-full p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] resize-none"></textarea>
-          <button id="saveScratchpadBtn" class="mt-3 w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors">
-            Save as Draft
-          </button>
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>Feedback & Reviews Given</span>
+            <span class="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600">
+              <i data-lucide="message-square-check" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="clientSubmittedFeedbackCount">0</div>
+          <div class="mt-2 text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
+            <span id="clientReviewedRepliesCount">0</span> reviewed by authors
+          </div>
         </div>
 
-      </aside>
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>Saved Reading List</span>
+            <span class="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600">
+              <i data-lucide="bookmark" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]" id="clientBookmarksCount">0</div>
+          <div class="mt-2 text-[11px] text-[var(--text-muted)]">Bookmarked for offline reading</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs">
+          <div class="flex items-center justify-between text-xs text-[var(--text-muted)] mb-2">
+            <span>Client Status</span>
+            <span class="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600">
+              <i data-lucide="badge-check" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">Verified</div>
+          <div class="mt-2 text-[11px] text-[var(--text-muted)]">Authorized to leave reviews</div>
+        </div>
+
+      </section>
+
+      <!-- CLIENT WORKSPACE 2-COLUMN -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left 8 Cols: Author Dispatches & Client Feedback Tabs -->
+        <div class="lg:col-span-8 space-y-6">
+          
+          <!-- Tab Navigation -->
+          <div class="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-bold">
+              <button id="clientTabExploreBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer">
+                Author Dispatches (<span id="clientTabExploreCount">0</span>)
+              </button>
+              <button id="clientTabFeedbackBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer">
+                My Submitted Feedback (<span id="clientTabFeedbackBadge">0</span>)
+              </button>
+              <button id="clientTabBookmarksBtn" class="dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer">
+                Reading List (<span id="clientTabBookmarksBadge">0</span>)
+              </button>
+            </div>
+            <span class="text-xs text-[var(--text-muted)] hidden sm:inline">Direct Author Feedback Portal</span>
+          </div>
+
+          <!-- Client Filter Bar (Search + Category) -->
+          <div id="clientFilterBar" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-1">
+              <i data-lucide="search" class="w-4 h-4 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" id="clientSearchInput" placeholder="Search author dispatches by title, author name, or topic..." class="w-full pl-9 pr-3.5 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+            </div>
+            <select id="clientCategoryFilter" class="px-3.5 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+              <option value="All Stories">All Categories</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Design & UX">Design & UX</option>
+              <option value="AI & Futures">AI & Futures</option>
+              <option value="Culture">Culture</option>
+              <option value="Founder Notes">Founder Notes</option>
+              <option value="Productivity">Productivity</option>
+            </select>
+          </div>
+
+          <!-- Tab Content 1: Explore Author Dispatches -->
+          <div id="clientExploreContainer" class="space-y-4">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Tab Content 2: My Submitted Feedback & Reviews -->
+          <div id="clientFeedbackContainer" class="hidden space-y-4">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Tab Content 3: Bookmarked Reading List -->
+          <div id="clientBookmarksContainer" class="hidden space-y-4">
+            <!-- Rendered by JS -->
+          </div>
+
+        </div>
+
+        <!-- Right 4 Cols: Client Guidance & Engagement -->
+        <aside class="lg:col-span-4 space-y-6">
+          
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-teal-700 to-teal-950 text-white shadow-md">
+            <div class="flex items-center gap-2 mb-2">
+              <i data-lucide="message-square-plus" class="w-5 h-5 text-teal-300"></i>
+              <h3 class="font-bold text-base font-serif-reading">Client Review Portal</h3>
+            </div>
+            <p class="text-xs text-teal-100/90 leading-relaxed mb-4">
+              As a client reader, your critique guides authors. Submit editorial notes, suggest technical improvements, or commend insightful breakdowns directly to the authors.
+            </p>
+            <div class="flex items-center gap-2 text-[11px] bg-teal-800/60 p-2.5 rounded-xl border border-teal-600/30">
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+              <span>Click "Leave Feedback / Review" on any author story below.</span>
+            </div>
+          </div>
+
+          <!-- Feedback Types Explanation -->
+          <div class="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">Supported Review Types</h4>
+            
+            <div class="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <span class="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0"></span>
+              <div>
+                <strong class="text-[var(--text-primary)]">Technical Review:</strong>
+                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Evaluate architecture patterns, benchmark reproducibility, and code clarity.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <span class="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
+              <div>
+                <strong class="text-[var(--text-primary)]">Editorial Suggestion:</strong>
+                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Offer pacing, phrasing, or narrative structure suggestions.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <span class="w-2 h-2 rounded-full bg-rose-500 mt-1.5 shrink-0"></span>
+              <div>
+                <strong class="text-[var(--text-primary)]">Praise & Appreciation:</strong>
+                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">Commend stellar insights and deep investigative reporting.</p>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
 
     </div>
 
   </main>
 
-  <!-- Footer -->
-  <footer class="mt-12 w-full border-t border-[var(--border-subtle)] py-6 bg-[var(--bg-surface)]">
+  <!-- ============================================================
+       MODAL: CLIENT LEAVE FEEDBACK & COMMENT
+       ============================================================ -->
+  <div id="feedbackModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl transform scale-95 transition-transform duration-200">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)] mb-5">
+        <div>
+          <h3 class="text-lg font-bold font-serif-reading text-[var(--text-primary)] flex items-center gap-2">
+            <i data-lucide="message-square-quote" class="w-5 h-5 text-[var(--accent-primary)]"></i>
+            <span>Leave Client Feedback</span>
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-0.5">Send constructive critique, feedback, or appreciation directly to the author.</p>
+        </div>
+        <button type="button" id="closeFeedbackModalBtn" class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="feedbackForm" class="space-y-4">
+        <input type="hidden" id="fbBlogId">
+        <input type="hidden" id="fbAuthorId">
+        <input type="hidden" id="fbAuthorName">
+
+        <!-- Target Story Banner -->
+        <div class="p-3.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Target Dispatch</span>
+          <p id="fbBlogTitle" class="text-xs sm:text-sm font-bold text-[var(--text-primary)] line-clamp-1 mt-0.5 font-serif-reading"></p>
+          <p id="fbAuthorSub" class="text-[11px] text-[var(--accent-primary)] font-semibold mt-0.5"></p>
+        </div>
+
+        <!-- Feedback Type Picker -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Feedback Type</label>
+          <select id="fbTypeSelect" class="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+            <option value="Editorial Suggestion">Editorial Suggestion (Pacing, grammar, structure)</option>
+            <option value="Technical Review">Technical Review (Architecture, code, depth)</option>
+            <option value="Praise & Appreciation">Praise & Appreciation (Commendation)</option>
+            <option value="Question / Inquiry">Question / Inquiry (Clarification needed)</option>
+            <option value="General Feedback">General Feedback</option>
+          </select>
+        </div>
+
+        <!-- Rating Picker -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Rating (1 to 5 Stars)</label>
+          <div class="flex items-center gap-2" id="starRatingGroup">
+            <button type="button" data-star="1" class="star-btn text-amber-400 hover:scale-110 transition-transform cursor-pointer text-xl">★</button>
+            <button type="button" data-star="2" class="star-btn text-amber-400 hover:scale-110 transition-transform cursor-pointer text-xl">★</button>
+            <button type="button" data-star="3" class="star-btn text-amber-400 hover:scale-110 transition-transform cursor-pointer text-xl">★</button>
+            <button type="button" data-star="4" class="star-btn text-amber-400 hover:scale-110 transition-transform cursor-pointer text-xl">★</button>
+            <button type="button" data-star="5" class="star-btn text-amber-400 hover:scale-110 transition-transform cursor-pointer text-xl">★</button>
+            <span id="starRatingLabel" class="text-xs font-semibold text-[var(--text-muted)] ml-2">5 Stars (Excellent)</span>
+          </div>
+          <input type="hidden" id="fbRatingVal" value="5">
+        </div>
+
+        <!-- Feedback Message -->
+        <div>
+          <label for="fbMessage" class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Feedback & Detailed Comment</label>
+          <textarea id="fbMessage" required rows="4" placeholder="Detail your thoughts, technical points, or suggestions for the author..." class="w-full p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)] resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-subtle)]">
+          <button type="button" id="cancelFeedbackModalBtn" class="px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" id="submitFeedbackBtn" class="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Submit Feedback</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL: DELETE DISPATCH CONFIRMATION
+       ============================================================ -->
+  <div id="dashboardDeleteModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl">
+      
+      <div class="flex items-center gap-3.5 mb-4">
+        <span class="w-11 h-11 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </span>
+        <div>
+          <h3 class="text-base sm:text-lg font-bold font-serif-reading text-[var(--text-primary)]">Delete Dispatch</h3>
+          <p class="text-xs text-[var(--text-muted)]">Confirmation required</p>
+        </div>
+      </div>
+
+      <div class="bg-[var(--bg-subtle)] p-4 rounded-2xl border border-[var(--border-subtle)] mb-5">
+        <p class="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold mb-1">Target Story</p>
+        <p id="deleteTargetBlogTitle" class="text-sm font-bold text-[var(--text-primary)] font-serif-reading line-clamp-2 mb-2"></p>
+        <p class="text-xs text-rose-600 dark:text-rose-400 flex items-start gap-1.5 font-medium leading-relaxed">
+          <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+          <span>Are you sure you want to delete this post? This action will permanently remove it from the publication and cannot be undone.</span>
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-subtle)]">
+        <button type="button" id="cancelDeleteBlogModalBtn" class="px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button type="button" id="confirmDeleteBlogModalBtn" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>Yes, Delete Story</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Workspace Footer -->
+  <footer class="mt-16 w-full border-t border-[var(--border-subtle)] py-6 bg-[var(--bg-surface)]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
-      <span>© 2026 Chronicle Independent Publishing Inc. Author Dashboard</span>
+      <span>© 2026 Chronicle Independent Publishing Inc. — Dedicated Workspace</span>
       <div class="flex items-center gap-4">
         <a href="index.html" class="hover:underline">Landing Page</a>
-        <a href="create-blog.html" class="hover:underline">Create Blog</a>
+        <a href="index.html#stories" class="hover:underline">Explore Stories</a>
         <button type="button" data-auth-logout class="text-red-500 hover:underline cursor-pointer">Log Out</button>
       </div>
     </div>
   </footer>
 
+  <!-- Scripts -->
   <script src="js/data.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       if (window.lucide) window.lucide.createIcons();
 
-      const user = ChronicleAuth.getUser();
+      let currentUser = ChronicleAuth.getUser();
 
-      // If no active session, guide them to login
-      if (!user) {
-        showToast('Please log in to access your author dashboard.', 'info');
-        setTimeout(() => {
-          window.location.href = 'login.html';
-        }, 800);
-        return;
-      }
-
-      // Populate user info dynamically
-      document.getElementById('dashAvatar').src = user.avatar;
-      document.getElementById('dashName').textContent = user.name;
-      document.getElementById('dashRole').textContent = user.role;
-      document.getElementById('dashEmail').textContent = user.email;
-
-      // Load published articles (clean user data only)
-      let allArticles = [];
-      try {
-        const raw = localStorage.getItem('chronicle_articles_v2');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            allArticles = parsed.filter(a => !/^post-[1-7]$/.test(a.id) && a.author && a.author.name !== 'Dr. Elena Rostova');
-          }
-        }
-      } catch (e) {
-        allArticles = [];
-      }
-
-      function updateDashboardArticles(list) {
-        const mine = list.filter(a =>
-          (a.authorId && user.id && a.authorId === user.id) ||
-          (a.author && a.author.name && a.author.name.toLowerCase() === user.name.toLowerCase())
-        );
-        const totalClaps = mine.reduce((sum, a) => sum + (a.claps || 0), 0);
-        const totalComments = mine.reduce((sum, a) => sum + ((a.comments || []).length), 0);
-
-        document.getElementById('dashPublishedCount').textContent = mine.length;
-        document.getElementById('tabPublishedCount').textContent = mine.length;
-        document.getElementById('dashTotalClaps').textContent = totalClaps.toLocaleString();
-        document.getElementById('dashCommentsCount').textContent = totalComments;
-        renderAuthorArticles(mine);
-      }
-
-      // Show initial state or loading indicator, then sync from backend
-      if (allArticles.length > 0) {
-        updateDashboardArticles(allArticles);
-      } else {
-        document.getElementById('authorStoriesList').innerHTML = '<div class="py-12 text-center text-xs text-[var(--text-muted)]">Loading your dispatches…</div>';
-      }
-
-      fetch('/api/blogs')
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(data => {
-          if (Array.isArray(data.blogs)) {
-            localStorage.setItem('chronicle_articles_v2', JSON.stringify(data.blogs));
-            updateDashboardArticles(data.blogs);
-          }
-        })
-        .catch(() => updateDashboardArticles(allArticles));
-
-      // Render draft
-      renderDrafts();
-
-      // Tab handlers
-      const tabPublishedBtn = document.getElementById('tabPublishedBtn');
-      const tabDraftsBtn = document.getElementById('tabDraftsBtn');
-      const publishedList = document.getElementById('authorStoriesList');
-      const draftsList = document.getElementById('authorDraftsList');
-
-      tabPublishedBtn.addEventListener('click', () => {
-        tabPublishedBtn.className = 'dash-tab active px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)]';
-        tabDraftsBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]';
-        publishedList.classList.remove('hidden');
-        draftsList.classList.add('hidden');
-      });
-
-      tabDraftsBtn.addEventListener('click', () => {
-        tabDraftsBtn.className = 'dash-tab active px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)]';
-        tabPublishedBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]';
-        draftsList.classList.remove('hidden');
-        publishedList.classList.add('hidden');
-      });
-
-      // Quick scratchpad
-      const scratchpad = document.getElementById('quickScratchpad');
-      const saveScratchpadBtn = document.getElementById('saveScratchpadBtn');
-      saveScratchpadBtn.addEventListener('click', () => {
-        const text = scratchpad.value.trim();
-        if (!text) {
-          showToast('Please type an idea first.', 'error');
+      // If no session, auto-login demo author or guide
+      if (!currentUser) {
+        try {
+          currentUser = await ChronicleAuth.loginDemoAuthor();
+        } catch (e) {
+          showToast('Please log in to access the workspace dashboard.', 'info');
+          setTimeout(() => { window.location.href = 'login.html'; }, 800);
           return;
         }
-        localStorage.setItem('chronicle_active_draft', JSON.stringify({
-          title: text.slice(0, 50) + (text.length > 50 ? '...' : ''),
-          excerpt: text,
-          body: text,
-          category: 'Engineering',
-          savedAt: new Date().toLocaleTimeString()
-        }));
-        scratchpad.value = '';
-        renderDrafts();
-        showToast('Idea saved to drafts!', 'success');
-      });
-    });
+      }
 
-    function renderAuthorArticles(articles) {
-      const container = document.getElementById('authorStoriesList');
-      if (!container) return;
+      // Initial active role: based on user.role
+      const isClientRole = (currentUser.role || '').toLowerCase().includes('client') ||
+                           (currentUser.role || '').toLowerCase().includes('reader');
+      let currentView = isClientRole ? 'client' : 'author';
 
-      if (articles.length === 0) {
+      // Elements
+      const dashAvatar = document.getElementById('dashAvatar');
+      const dashName = document.getElementById('dashName');
+      const dashEmail = document.getElementById('dashEmail');
+      const dashRoleBadge = document.getElementById('dashRoleBadge');
+      const currentViewBadge = document.getElementById('currentViewBadge');
+      const dashRoleDescription = document.getElementById('dashRoleDescription');
+      const switchUserQuickBtn = document.getElementById('switchUserQuickBtn');
+      const switchUserBtnText = document.getElementById('switchUserBtnText');
+      const dashPrimaryActionBtn = document.getElementById('dashPrimaryActionBtn');
+      const dashPrimaryActionText = document.getElementById('dashPrimaryActionText');
+
+      const viewToggleAuthor = document.getElementById('viewToggleAuthor');
+      const viewToggleClient = document.getElementById('viewToggleClient');
+      const authorDashboardSection = document.getElementById('authorDashboardSection');
+      const clientDashboardSection = document.getElementById('clientDashboardSection');
+      const headerRoleBadge = document.getElementById('headerRoleBadge');
+      const headerWriteBtn = document.getElementById('headerWriteBtn');
+
+      function syncUserProfileUI() {
+        if (!currentUser) return;
+        dashAvatar.src = currentUser.avatar;
+        dashName.textContent = currentUser.name;
+        dashEmail.textContent = currentUser.email;
+
+        const isUserClient = (currentUser.role || '').toLowerCase().includes('client') ||
+                             (currentUser.role || '').toLowerCase().includes('reader');
+        dashRoleBadge.textContent = isUserClient ? 'Client / Reader' : 'Author';
+        dashRoleBadge.className = isUserClient
+          ? 'text-xs px-2.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+          : 'text-xs px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/60 text-[var(--accent-primary)] font-bold';
+
+        if (isUserClient) {
+          switchUserBtnText.textContent = 'Switch to Author (Sarah)';
+        } else {
+          switchUserBtnText.textContent = 'Switch to Client (David)';
+        }
+      }
+
+      syncUserProfileUI();
+
+      // Quick Switch Account between Sarah (Author) and David (Client)
+      if (switchUserQuickBtn) {
+        switchUserQuickBtn.addEventListener('click', async () => {
+          const isUserClient = (currentUser.role || '').toLowerCase().includes('client') ||
+                               (currentUser.role || '').toLowerCase().includes('reader');
+          try {
+            if (isUserClient) {
+              await ChronicleAuth.loginApi('sarah@chronicle.local', 'password123', true);
+              showToast('Switched to Author profile (Sarah Jenkins)', 'success');
+            } else {
+              await ChronicleAuth.loginApi('david@chronicle.local', 'password123', true);
+              showToast('Switched to Client profile (David Miller)', 'success');
+            }
+            currentUser = ChronicleAuth.getUser();
+            currentView = (currentUser.role || '').toLowerCase().includes('client') ? 'client' : 'author';
+            syncUserProfileUI();
+            setView(currentView);
+            refreshData();
+          } catch (e) {
+            showToast('Could not switch account: ' + e.message, 'error');
+          }
+        });
+      }
+
+      // View Toggle Functionality
+      function setView(view) {
+        currentView = view;
+        const topBarUserRole = document.getElementById('topBarUserRole');
+        if (view === 'author') {
+          viewToggleAuthor.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-xs cursor-pointer';
+          viewToggleClient.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer';
+          authorDashboardSection.classList.remove('hidden');
+          clientDashboardSection.classList.add('hidden');
+          headerRoleBadge.textContent = 'Author Studio';
+          currentViewBadge.textContent = 'Viewing: Author Studio';
+          if (topBarUserRole) topBarUserRole.textContent = 'Author Studio Console';
+          dashRoleDescription.textContent = 'Manage published dispatches, review client feedback, draft new ideas, and monitor reader engagement.';
+          dashPrimaryActionBtn.href = 'create-blog.html';
+          dashPrimaryActionText.textContent = 'New Story';
+          if (headerWriteBtn) headerWriteBtn.classList.remove('hidden');
+        } else {
+          viewToggleClient.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-xs cursor-pointer';
+          viewToggleAuthor.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer';
+          clientDashboardSection.classList.remove('hidden');
+          authorDashboardSection.classList.add('hidden');
+          headerRoleBadge.textContent = 'Client Portal';
+          currentViewBadge.textContent = 'Viewing: Client Portal';
+          if (topBarUserRole) topBarUserRole.textContent = 'Client Reader Portal';
+          dashRoleDescription.textContent = 'Explore author dispatches across technical domains, submit reviews & comments, and track author replies.';
+          dashPrimaryActionBtn.href = 'index.html#stories';
+          dashPrimaryActionText.textContent = 'Explore All Stories';
+          if (headerWriteBtn) headerWriteBtn.classList.add('hidden');
+        }
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      viewToggleAuthor.addEventListener('click', () => setView('author'));
+      viewToggleClient.addEventListener('click', () => setView('client'));
+      setView(currentView);
+
+      // Data caches
+      let allBlogs = [];
+      let allFeedback = [];
+      let bookmarkedIds = JSON.parse(localStorage.getItem('chronicle_client_bookmarks') || '[]');
+
+      async function refreshData() {
+        // Fetch blogs
+        try {
+          const res = await fetch('/api/blogs');
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.blogs)) {
+              allBlogs = data.blogs;
+            }
+          }
+        } catch (e) {
+          console.warn('Could not fetch /api/blogs', e);
+        }
+
+        if (allBlogs.length === 0 && typeof INITIAL_ARTICLES !== 'undefined' && Array.isArray(INITIAL_ARTICLES)) {
+          allBlogs = [...INITIAL_ARTICLES];
+        }
+
+        // Fetch feedback
+        try {
+          const fbRes = await fetch('/api/feedback');
+          if (fbRes.ok) {
+            const fbData = await fbRes.json();
+            if (Array.isArray(fbData.feedback)) {
+              allFeedback = fbData.feedback;
+            }
+          }
+        } catch (e) {
+          console.warn('Could not fetch /api/feedback', e);
+        }
+
+        renderAuthorDashboard();
+        renderClientDashboard();
+      }
+
+      // ============================================================
+      // AUTHOR DASHBOARD LOGIC
+      // ============================================================
+      function renderAuthorDashboard() {
+        const myBlogs = allBlogs.filter(b =>
+          (b.authorId && currentUser.id && b.authorId === currentUser.id) ||
+          (b.author && b.author.name && currentUser.name && b.author.name.toLowerCase() === currentUser.name.toLowerCase())
+        );
+
+        const myFeedback = allFeedback.filter(f =>
+          (f.authorId && currentUser.id && f.authorId === currentUser.id) ||
+          (f.authorName && currentUser.name && f.authorName.toLowerCase() === currentUser.name.toLowerCase())
+        );
+
+        const totalClaps = myBlogs.reduce((sum, b) => sum + (b.claps || 0), 0);
+        const pendingFeedback = myFeedback.filter(f => f.status === 'Pending').length;
+
+        // Metrics
+        document.getElementById('authorPublishedCount').textContent = myBlogs.length;
+        document.getElementById('authorTabStoriesCount').textContent = myBlogs.length;
+        document.getElementById('authorTotalClaps').textContent = totalClaps.toLocaleString();
+        document.getElementById('authorFeedbackCount').textContent = myFeedback.length;
+        document.getElementById('authorTabFeedbackBadge').textContent = myFeedback.length;
+        document.getElementById('authorPendingFeedbackCount').textContent = pendingFeedback;
+
+        // Drafts count
+        const draftRaw = localStorage.getItem('chronicle_active_draft');
+        const draftCount = draftRaw ? 1 : 0;
+        document.getElementById('authorDraftCount').textContent = draftCount;
+        document.getElementById('authorTabDraftsBadge').textContent = draftCount;
+
+        // Apply filters and render stories
+        applyAuthorStoryFilters(myBlogs);
+        renderAuthorFeedbackList(myFeedback);
+        renderAuthorDrafts();
+      }
+
+      const authorSearchInput = document.getElementById('authorSearchInput');
+      const authorCategoryFilter = document.getElementById('authorCategoryFilter');
+
+      function applyAuthorStoryFilters(myBlogs = null) {
+        if (!myBlogs) {
+          myBlogs = allBlogs.filter(b =>
+            (b.authorId && currentUser.id && b.authorId === currentUser.id) ||
+            (b.author && b.author.name && currentUser.name && b.author.name.toLowerCase() === currentUser.name.toLowerCase())
+          );
+        }
+
+        const q = (authorSearchInput ? authorSearchInput.value : '').trim().toLowerCase();
+        const cat = authorCategoryFilter ? authorCategoryFilter.value : 'All Stories';
+
+        let filtered = [...myBlogs];
+        if (cat && cat !== 'All Stories') {
+          filtered = filtered.filter(b => (b.category || '').toLowerCase() === cat.toLowerCase());
+        }
+        if (q) {
+          filtered = filtered.filter(b =>
+            (b.title && b.title.toLowerCase().includes(q)) ||
+            (b.excerpt && b.excerpt.toLowerCase().includes(q)) ||
+            (b.category && b.category.toLowerCase().includes(q)) ||
+            (Array.isArray(b.tags) && b.tags.some(t => String(t).toLowerCase().includes(q)))
+          );
+        }
+
+        renderAuthorStoriesList(filtered);
+      }
+
+      if (authorSearchInput) authorSearchInput.addEventListener('input', () => applyAuthorStoryFilters());
+      if (authorCategoryFilter) authorCategoryFilter.addEventListener('change', () => applyAuthorStoryFilters());
+
+      function renderAuthorStoriesList(stories) {
+        const container = document.getElementById('authorStoriesContainer');
+        if (!container) return;
+
+        if (stories.length === 0) {
+          container.innerHTML = `
+            <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-surface)]">
+              <i data-lucide="file-plus" class="w-8 h-8 mx-auto text-[var(--text-muted)] mb-2"></i>
+              <p class="font-bold text-sm text-[var(--text-primary)]">No stories match your filter criteria.</p>
+              <p class="text-xs text-[var(--text-muted)] mt-1">Ready to publish an in-depth dispatch?</p>
+              <a href="create-blog.html" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-bold uppercase tracking-wider">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Compose New Story</span>
+              </a>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
+        container.innerHTML = stories.map(art => `
+          <div class="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 group">
+            <div class="flex items-start gap-4">
+              <img src="${art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80'}" alt="${art.title}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0">
+              <div>
+                <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)] mb-1">
+                  <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${art.category || 'Article'}</span>
+                  <span>•</span>
+                  <span>${art.publishedAt || 'Recent'}</span>
+                  <span>•</span>
+                  <span>${art.readingTime || 3} min read</span>
+                </div>
+                <h3 class="text-base font-bold font-serif-reading text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">
+                  ${art.title}
+                </h3>
+                <p class="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">
+                  ${art.excerpt || ''}
+                </p>
+                
+                <div class="mt-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500 fill-rose-500"></i>
+                    <span>${art.claps || 0} claps</span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5 text-purple-500"></i>
+                    <span>${(art.comments || []).length} responses</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <a href="blog.html?id=${art.id}" class="p-2.5 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="View story">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+              </a>
+              <a href="create-blog.html?edit=${art.id}" class="p-2.5 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Edit story">
+                <i data-lucide="pen-tool" class="w-4 h-4"></i>
+              </a>
+              <button onclick="promptDeleteAuthorBlog('${art.id}', '${encodeURIComponent(art.title)}')" class="p-2.5 rounded-xl bg-[var(--bg-subtle)] hover:bg-rose-50 dark:hover:bg-rose-950/30 text-[var(--text-muted)] hover:text-rose-500 transition-colors cursor-pointer" title="Delete dispatch">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function renderAuthorFeedbackList(feedbackList) {
+        const container = document.getElementById('authorFeedbackContainer');
+        if (!container) return;
+
+        if (feedbackList.length === 0) {
+          container.innerHTML = `
+            <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-surface)]">
+              <i data-lucide="message-square-dashed" class="w-8 h-8 mx-auto text-[var(--text-muted)] mb-2"></i>
+              <p class="font-bold text-sm text-[var(--text-primary)]">No client feedback received yet.</p>
+              <p class="text-xs text-[var(--text-muted)] mt-1">When readers submit technical reviews or editorial notes, they will appear here.</p>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
+        container.innerHTML = feedbackList.map(fb => {
+          const stars = '★'.repeat(fb.rating || 5) + '☆'.repeat(Math.max(0, 5 - (fb.rating || 5)));
+          const isPending = fb.status === 'Pending';
+          return `
+            <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-3">
+                  <img src="${fb.clientAvatar || 'https://ui-avatars.com/api/?name=Client&background=c95123&color=fff'}" alt="${fb.clientName}" class="w-9 h-9 rounded-full object-cover border border-[var(--border-subtle)]">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-[var(--text-primary)]">${fb.clientName || 'Client Reader'}</span>
+                      <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                        fb.type === 'Technical Review' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
+                        fb.type === 'Editorial Suggestion' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
+                        'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
+                      }">${fb.type}</span>
+                    </div>
+                    <span class="text-[11px] text-[var(--text-muted)]">${new Date(fb.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span class="text-amber-400 text-xs">${stars}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    isPending ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                  }">${fb.status || 'Reviewed'}</span>
+                </div>
+              </div>
+
+              <!-- Associated Blog -->
+              <div class="text-xs text-[var(--text-muted)] bg-[var(--bg-subtle)] px-3 py-2 rounded-xl flex items-center gap-1.5">
+                <i data-lucide="book-open" class="w-3.5 h-3.5 text-[var(--accent-primary)]"></i>
+                <span>Story:</span>
+                <a href="blog.html?id=${fb.blogId}" class="font-bold text-[var(--text-primary)] hover:underline truncate">${fb.blogTitle}</a>
+              </div>
+
+              <!-- Message -->
+              <p class="text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-subtle)]/50 p-3 rounded-xl border border-[var(--border-subtle)]">
+                "${fb.message}"
+              </p>
+
+              <!-- Author Reply Display (if exists) -->
+              ${fb.authorReply ? `
+                <div class="ml-4 p-3 rounded-xl bg-orange-50/60 dark:bg-orange-950/20 border-l-2 border-[var(--accent-primary)] text-xs text-[var(--text-secondary)]">
+                  <div class="flex items-center gap-1 text-[11px] font-bold text-[var(--accent-primary)] mb-1">
+                    <i data-lucide="corner-down-right" class="w-3 h-3"></i>
+                    <span>Your Author Reply:</span>
+                  </div>
+                  <p class="italic text-[var(--text-primary)]">"${fb.authorReply}"</p>
+                </div>
+              ` : `
+                <!-- Reply Input Area -->
+                <div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <input type="text" id="replyInput-${fb.id}" placeholder="Write an author response to this feedback..." class="flex-1 px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] outline-none focus:border-[var(--accent-primary)]">
+                  <div class="flex items-center gap-2">
+                    <button onclick="handleAuthorReply('${fb.id}')" class="px-3 py-1.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold transition-all cursor-pointer">
+                      Reply
+                    </button>
+                    ${isPending ? `
+                      <button onclick="handleMarkFeedbackStatus('${fb.id}', 'Reviewed')" class="px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] hover:bg-[var(--bg-subtle)] text-xs font-semibold text-[var(--text-primary)] transition-all cursor-pointer">
+                        Mark Reviewed
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+              `}
+            </div>
+          `;
+        }).join('');
+
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function renderAuthorDrafts() {
+        const container = document.getElementById('authorDraftsContainer');
+        if (!container) return;
+
+        const raw = localStorage.getItem('chronicle_active_draft');
+        if (!raw) {
+          container.innerHTML = `
+            <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-surface)]">
+              <i data-lucide="file-text" class="w-8 h-8 mx-auto text-[var(--text-muted)] mb-2"></i>
+              <p class="font-bold text-sm text-[var(--text-primary)]">No drafts currently in scratchpad.</p>
+              <p class="text-xs text-[var(--text-muted)] mt-1">Start writing in the Studio to auto-save drafts.</p>
+              <a href="create-blog.html" class="mt-4 inline-block px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-bold uppercase tracking-wider">Open Studio</a>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
+        const draft = JSON.parse(raw);
         container.innerHTML = `
-          <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-2xl">
-            <p class="font-bold text-sm text-[var(--text-primary)]">No stories published yet.</p>
-            <p class="text-xs text-[var(--text-muted)] mt-1">Ready to publish your thoughts?</p>
-            <a href="create-blog.html" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-bold uppercase tracking-wider">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-              <span>Create Your First Blog</span>
-            </a>
+          <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-500">Unpublished Draft</span>
+              <h4 class="text-base font-bold font-serif-reading text-[var(--text-primary)] mt-0.5">${draft.title || 'Untitled Draft'}</h4>
+              <p class="text-xs text-[var(--text-muted)] mt-1 line-clamp-1">${draft.excerpt || 'No summary entered yet'}</p>
+              <span class="text-[11px] text-[var(--text-muted)] mt-2 inline-block">Last edited at ${draft.savedAt || 'earlier today'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="create-blog.html" class="px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-bold hover:bg-[var(--accent-primary-hover)] transition-all">
+                Continue in Studio
+              </a>
+              <button onclick="handleDiscardDraft()" class="p-2 rounded-xl text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer" title="Discard Draft">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
           </div>
         `;
         if (window.lucide) window.lucide.createIcons();
-        return;
       }
 
-      container.innerHTML = articles.map(art => `
-        <div class="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 group">
-          <div class="flex items-start gap-4">
-            <img src="${art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80'}" alt="${art.title}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0">
-            <div>
-              <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)] mb-1">
-                <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${art.category}</span>
-                <span>•</span>
-                <span>${art.publishedAt}</span>
-                <span>•</span>
-                <span>${art.readingTime} min read</span>
+      // Author tab switching
+      const authorTabStoriesBtn = document.getElementById('authorTabStoriesBtn');
+      const authorTabFeedbackBtn = document.getElementById('authorTabFeedbackBtn');
+      const authorTabDraftsBtn = document.getElementById('authorTabDraftsBtn');
+      const authorStoriesContainer = document.getElementById('authorStoriesContainer');
+      const authorFeedbackContainer = document.getElementById('authorFeedbackContainer');
+      const authorDraftsContainer = document.getElementById('authorDraftsContainer');
+      const authorFilterBar = document.getElementById('authorFilterBar');
+
+      authorTabStoriesBtn.addEventListener('click', () => {
+        authorTabStoriesBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer';
+        authorTabFeedbackBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        authorTabDraftsBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        authorStoriesContainer.classList.remove('hidden');
+        authorFeedbackContainer.classList.add('hidden');
+        authorDraftsContainer.classList.add('hidden');
+        if (authorFilterBar) authorFilterBar.classList.remove('hidden');
+      });
+
+      authorTabFeedbackBtn.addEventListener('click', () => {
+        authorTabFeedbackBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer';
+        authorTabStoriesBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        authorTabDraftsBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        authorFeedbackContainer.classList.remove('hidden');
+        authorStoriesContainer.classList.add('hidden');
+        authorDraftsContainer.classList.add('hidden');
+        if (authorFilterBar) authorFilterBar.classList.add('hidden');
+      });
+
+      authorTabDraftsBtn.addEventListener('click', () => {
+        authorTabDraftsBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer';
+        authorTabStoriesBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        authorTabFeedbackBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        authorDraftsContainer.classList.remove('hidden');
+        authorStoriesContainer.classList.add('hidden');
+        authorFeedbackContainer.classList.add('hidden');
+        if (authorFilterBar) authorFilterBar.classList.add('hidden');
+      });
+
+      // Quick scratchpad save
+      const authorScratchpadText = document.getElementById('authorScratchpadText');
+      const saveAuthorScratchpadBtn = document.getElementById('saveAuthorScratchpadBtn');
+      if (saveAuthorScratchpadBtn) {
+        saveAuthorScratchpadBtn.addEventListener('click', () => {
+          const text = authorScratchpadText.value.trim();
+          if (!text) {
+            showToast('Please type an idea first.', 'error');
+            return;
+          }
+          localStorage.setItem('chronicle_active_draft', JSON.stringify({
+            title: text.slice(0, 50) + (text.length > 50 ? '...' : ''),
+            excerpt: text,
+            body: text,
+            category: 'Engineering',
+            savedAt: new Date().toLocaleTimeString()
+          }));
+          authorScratchpadText.value = '';
+          renderAuthorDrafts();
+          showToast('Draft saved to scratchpad!', 'success');
+        });
+      }
+
+      // ============================================================
+      // CLIENT DASHBOARD LOGIC
+      // ============================================================
+      function renderClientDashboard() {
+        document.getElementById('clientStoriesCount').textContent = allBlogs.length;
+        document.getElementById('clientTabExploreCount').textContent = allBlogs.length;
+
+        const myFeedback = allFeedback.filter(f =>
+          (f.clientId && currentUser.id && f.clientId === currentUser.id) ||
+          (f.clientName && currentUser.name && f.clientName.toLowerCase() === currentUser.name.toLowerCase())
+        );
+
+        const reviewedReplies = myFeedback.filter(f => f.authorReply || f.status === 'Reviewed').length;
+        document.getElementById('clientSubmittedFeedbackCount').textContent = myFeedback.length;
+        document.getElementById('clientTabFeedbackBadge').textContent = myFeedback.length;
+        document.getElementById('clientReviewedRepliesCount').textContent = reviewedReplies;
+
+        // Bookmarks count
+        document.getElementById('clientBookmarksCount').textContent = bookmarkedIds.length;
+        document.getElementById('clientTabBookmarksBadge').textContent = bookmarkedIds.length;
+
+        applyClientStoryFilters();
+        renderClientFeedbackList(myFeedback);
+        renderClientBookmarksList();
+      }
+
+      const clientSearchInput = document.getElementById('clientSearchInput');
+      const clientCategoryFilter = document.getElementById('clientCategoryFilter');
+
+      function applyClientStoryFilters() {
+        const q = (clientSearchInput ? clientSearchInput.value : '').trim().toLowerCase();
+        const cat = clientCategoryFilter ? clientCategoryFilter.value : 'All Stories';
+
+        let filtered = [...allBlogs];
+        if (cat && cat !== 'All Stories') {
+          filtered = filtered.filter(b => (b.category || '').toLowerCase() === cat.toLowerCase());
+        }
+        if (q) {
+          filtered = filtered.filter(b =>
+            (b.title && b.title.toLowerCase().includes(q)) ||
+            (b.excerpt && b.excerpt.toLowerCase().includes(q)) ||
+            (b.category && b.category.toLowerCase().includes(q)) ||
+            (b.author && b.author.name && b.author.name.toLowerCase().includes(q)) ||
+            (b.authorName && b.authorName.toLowerCase().includes(q)) ||
+            (Array.isArray(b.tags) && b.tags.some(t => String(t).toLowerCase().includes(q)))
+          );
+        }
+
+        renderClientExploreList(filtered);
+      }
+
+      if (clientSearchInput) clientSearchInput.addEventListener('input', applyClientStoryFilters);
+      if (clientCategoryFilter) clientCategoryFilter.addEventListener('change', applyClientStoryFilters);
+
+      function renderClientExploreList(stories) {
+        const container = document.getElementById('clientExploreContainer');
+        if (!container) return;
+
+        if (stories.length === 0) {
+          container.innerHTML = `
+            <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-surface)]">
+              <i data-lucide="search" class="w-8 h-8 mx-auto text-[var(--text-muted)] mb-2"></i>
+              <p class="font-bold text-sm text-[var(--text-primary)]">No dispatches match your search.</p>
+              <p class="text-xs text-[var(--text-muted)] mt-1">Try another category or keyword.</p>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
+        container.innerHTML = stories.map(art => {
+          const authorName = (art.author && art.author.name) || art.authorName || 'Chronicle Author';
+          const authorAvatar = (art.author && art.author.avatar) || art.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=c95123&color=fff`;
+          const authorId = art.authorId || (art.author && art.author.id) || '';
+          const isSaved = bookmarkedIds.includes(art.id);
+
+          return `
+            <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-medium)] transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 group">
+              <div class="flex items-start gap-4 flex-1">
+                <img src="${art.coverImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80'}" alt="${art.title}" class="w-18 h-18 sm:w-24 sm:h-24 rounded-2xl object-cover shrink-0">
+                <div class="flex-1">
+                  <div class="flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)] mb-1">
+                    <span class="font-bold text-[var(--accent-primary)] uppercase tracking-wider">${art.category || 'Engineering'}</span>
+                    <span>•</span>
+                    <span>${art.readingTime || 3} min read</span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
+                      <img src="${authorAvatar}" class="w-4 h-4 rounded-full inline">
+                      ${authorName}
+                    </span>
+                  </div>
+
+                  <h3 class="text-base sm:text-lg font-bold font-serif-reading text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">
+                    ${art.title}
+                  </h3>
+                  
+                  <p class="text-xs text-[var(--text-muted)] line-clamp-2 mt-1">
+                    ${art.excerpt || ''}
+                  </p>
+
+                  <div class="mt-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500 fill-rose-500"></i>
+                      <span>${art.claps || 0} appreciations</span>
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="message-square" class="w-3.5 h-3.5 text-teal-600"></i>
+                      <span>${(art.comments || []).length} comments</span>
+                    </span>
+                  </div>
+                </div>
               </div>
-              <h3 class="text-base font-bold font-serif-reading text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1">
-                ${art.title}
-              </h3>
-              <p class="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">
-                ${art.excerpt}
-              </p>
-              
-              <div class="mt-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                <span class="flex items-center gap-1">
-                  <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500 fill-rose-500"></i>
-                  <span>${art.claps || 0} claps</span>
-                </span>
-                <span class="flex items-center gap-1">
-                  <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                  <span>${(art.comments || []).length} responses</span>
-                </span>
+
+              <!-- Action Buttons for Client -->
+              <div class="flex flex-wrap md:flex-col items-stretch sm:items-end gap-2 shrink-0 pt-3 md:pt-0 border-t md:border-0 border-[var(--border-subtle)]">
+                <button onclick="openFeedbackModal('${art.id}', '${encodeURIComponent(art.title)}', '${authorId}', '${encodeURIComponent(authorName)}')" class="px-4 py-2 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                  <i data-lucide="message-square-quote" class="w-3.5 h-3.5"></i>
+                  <span>Leave Feedback</span>
+                </button>
+                <div class="flex items-center gap-2 w-full justify-end">
+                  <a href="blog.html?id=${art.id}" class="flex-1 md:flex-initial text-center px-3 py-1.5 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-xs font-semibold text-[var(--text-primary)] transition-colors">
+                    Read Story
+                  </a>
+                  <button onclick="toggleBookmark('${art.id}')" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-xs ${isSaved ? 'text-amber-500 fill-amber-500' : 'text-[var(--text-muted)]'} transition-colors cursor-pointer" title="${isSaved ? 'Remove bookmark' : 'Bookmark story'}">
+                    <i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-current' : ''}"></i>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          `;
+        }).join('');
 
-          <div class="flex items-center gap-2 self-end sm:self-center">
-            <a href="blog.html?id=${art.id}" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="View story">
-              <i data-lucide="external-link" class="w-4 h-4"></i>
-            </a>
-            <a href="create-blog.html" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Edit story">
-              <i data-lucide="pen-tool" class="w-4 h-4"></i>
-            </a>
-            <button onclick="deleteArticle('${art.id}')" class="p-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-rose-50 dark:hover:bg-rose-950/30 text-[var(--text-muted)] hover:text-rose-500 transition-colors" title="Delete dispatch">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-
-      if (window.lucide) window.lucide.createIcons();
-    }
-
-    function renderDrafts() {
-      const container = document.getElementById('authorDraftsList');
-      const badge = document.getElementById('tabDraftsBadge');
-      const dashBadge = document.getElementById('dashDraftCount');
-      if (!container) return;
-
-      const raw = localStorage.getItem('chronicle_active_draft');
-      if (!raw) {
-        if (badge) badge.textContent = '0';
-        if (dashBadge) dashBadge.textContent = '0';
-        container.innerHTML = `
-          <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-2xl">
-            <p class="font-bold text-sm text-[var(--text-primary)]">No drafts currently in scratchpad.</p>
-            <p class="text-xs text-[var(--text-muted)] mt-1">Start writing in the Studio to auto-save drafts.</p>
-            <a href="create-blog.html" class="mt-3 inline-block px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-semibold">Open Studio</a>
-          </div>
-        `;
-        return;
+        if (window.lucide) window.lucide.createIcons();
       }
 
-      if (badge) badge.textContent = '1';
-      if (dashBadge) dashBadge.textContent = '1';
+      function renderClientFeedbackList(feedbackList) {
+        const container = document.getElementById('clientFeedbackContainer');
+        if (!container) return;
 
-      const draft = JSON.parse(raw);
-      container.innerHTML = `
-        <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between">
-          <div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-500">Unpublished Draft</span>
-            <h4 class="text-base font-bold font-serif-reading text-[var(--text-primary)] mt-0.5">${draft.title || 'Untitled Draft'}</h4>
-            <p class="text-xs text-[var(--text-muted)] mt-1 line-clamp-1">${draft.excerpt || 'No summary entered yet'}</p>
-            <span class="text-[11px] text-[var(--text-muted)] mt-2 inline-block">Last edited at ${draft.savedAt || 'earlier today'}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <a href="create-blog.html" class="px-3.5 py-2 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-semibold hover:bg-[var(--accent-primary-hover)]">
-              Continue Writing
-            </a>
-            <button onclick="discardDraft()" class="p-2 rounded-xl text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </div>
-        </div>
-      `;
+        if (feedbackList.length === 0) {
+          container.innerHTML = `
+            <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-surface)]">
+              <i data-lucide="message-square-plus" class="w-8 h-8 mx-auto text-[var(--text-muted)] mb-2"></i>
+              <p class="font-bold text-sm text-[var(--text-primary)]">You haven't submitted any feedback yet.</p>
+              <p class="text-xs text-[var(--text-muted)] mt-1">Browse author dispatches and click "Leave Feedback" to send notes directly to authors.</p>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
 
-      if (window.lucide) window.lucide.createIcons();
-    }
+        container.innerHTML = feedbackList.map(fb => {
+          const stars = '★'.repeat(fb.rating || 5) + '☆'.repeat(Math.max(0, 5 - (fb.rating || 5)));
+          return `
+            <div class="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-[var(--text-primary)] font-serif-reading">To Author: ${fb.authorName || 'Author'}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                    fb.type === 'Technical Review' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
+                    fb.type === 'Editorial Suggestion' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
+                    'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
+                  }">${fb.type}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-amber-400 text-xs">${stars}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    fb.status === 'Reviewed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                  }">${fb.status || 'Pending'}</span>
+                </div>
+              </div>
 
-    function discardDraft() {
-      localStorage.removeItem('chronicle_active_draft');
-      renderDrafts();
-      showToast('Draft discarded.', 'info');
-    }
+              <!-- Associated Blog -->
+              <div class="text-xs text-[var(--text-muted)] bg-[var(--bg-subtle)] px-3 py-2 rounded-xl flex items-center gap-1.5">
+                <i data-lucide="book-open" class="w-3.5 h-3.5 text-[var(--accent-primary)]"></i>
+                <span>Story:</span>
+                <a href="blog.html?id=${fb.blogId}" class="font-bold text-[var(--text-primary)] hover:underline truncate">${fb.blogTitle}</a>
+              </div>
 
-    function deleteArticle(id) {
-      if (!confirm('Are you sure you want to permanently delete this dispatch?')) return;
+              <!-- Client Comment -->
+              <p class="text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-subtle)]/50 p-3 rounded-xl border border-[var(--border-subtle)]">
+                "${fb.message}"
+              </p>
 
-      let articles = [];
-      try {
-        const raw = localStorage.getItem('chronicle_articles_v2');
-        articles = raw ? JSON.parse(raw) : [...INITIAL_ARTICLES];
-      } catch (e) {
-        articles = [...INITIAL_ARTICLES];
+              <!-- Author Response (if any) -->
+              ${fb.authorReply ? `
+                <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border-l-2 border-emerald-500 text-xs">
+                  <div class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                    <i data-lucide="check-circle" class="w-3 h-3"></i>
+                    <span>Author Response from ${fb.authorName}:</span>
+                  </div>
+                  <p class="italic text-[var(--text-primary)]">"${fb.authorReply}"</p>
+                </div>
+              ` : `
+                <div class="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
+                  <i data-lucide="clock" class="w-3 h-3"></i>
+                  <span>Awaiting author review and feedback response.</span>
+                </div>
+              `}
+            </div>
+          `;
+        }).join('');
+
+        if (window.lucide) window.lucide.createIcons();
       }
 
-      articles = articles.filter(a => a.id !== id);
-      localStorage.setItem('chronicle_articles_v2', JSON.stringify(articles));
+      function renderClientBookmarksList() {
+        const container = document.getElementById('clientBookmarksContainer');
+        if (!container) return;
 
-      renderAuthorArticles(articles);
-      document.getElementById('dashPublishedCount').textContent = articles.length;
-      document.getElementById('tabPublishedCount').textContent = articles.length;
-      showToast('Dispatch was deleted from your publication.', 'info');
-    }
+        const savedStories = allBlogs.filter(b => bookmarkedIds.includes(b.id));
+
+        if (savedStories.length === 0) {
+          container.innerHTML = `
+            <div class="py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-[var(--bg-surface)]">
+              <i data-lucide="bookmark-x" class="w-8 h-8 mx-auto text-[var(--text-muted)] mb-2"></i>
+              <p class="font-bold text-sm text-[var(--text-primary)]">No bookmarks saved yet.</p>
+              <p class="text-xs text-[var(--text-muted)] mt-1">Click the bookmark icon on any dispatch to save it to your reading list.</p>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
+        container.innerHTML = savedStories.map(art => `
+          <div class="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between gap-4">
+            <div>
+              <span class="text-[11px] text-[var(--accent-primary)] font-bold uppercase tracking-wider">${art.category || 'Story'}</span>
+              <h4 class="text-sm font-bold font-serif-reading text-[var(--text-primary)] line-clamp-1 mt-0.5">${art.title}</h4>
+              <p class="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">${art.excerpt || ''}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <a href="blog.html?id=${art.id}" class="px-3.5 py-1.5 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-semibold">
+                Read
+              </a>
+              <button onclick="toggleBookmark('${art.id}')" class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer" title="Remove bookmark">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      // Client tab switching
+      const clientTabExploreBtn = document.getElementById('clientTabExploreBtn');
+      const clientTabFeedbackBtn = document.getElementById('clientTabFeedbackBtn');
+      const clientTabBookmarksBtn = document.getElementById('clientTabBookmarksBtn');
+      const clientExploreContainer = document.getElementById('clientExploreContainer');
+      const clientFeedbackContainer = document.getElementById('clientFeedbackContainer');
+      const clientBookmarksContainer = document.getElementById('clientBookmarksContainer');
+      const clientFilterBar = document.getElementById('clientFilterBar');
+
+      clientTabExploreBtn.addEventListener('click', () => {
+        clientTabExploreBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer';
+        clientTabFeedbackBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        clientTabBookmarksBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        clientExploreContainer.classList.remove('hidden');
+        clientFeedbackContainer.classList.add('hidden');
+        clientBookmarksContainer.classList.add('hidden');
+        if (clientFilterBar) clientFilterBar.classList.remove('hidden');
+      });
+
+      clientTabFeedbackBtn.addEventListener('click', () => {
+        clientTabFeedbackBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer';
+        clientTabExploreBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        clientTabBookmarksBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        clientFeedbackContainer.classList.remove('hidden');
+        clientExploreContainer.classList.add('hidden');
+        clientBookmarksContainer.classList.add('hidden');
+        if (clientFilterBar) clientFilterBar.classList.add('hidden');
+      });
+
+      clientTabBookmarksBtn.addEventListener('click', () => {
+        clientTabBookmarksBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] transition-all cursor-pointer';
+        clientTabExploreBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        clientTabFeedbackBtn.className = 'dash-tab px-3.5 py-1.5 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer';
+        clientBookmarksContainer.classList.remove('hidden');
+        clientExploreContainer.classList.add('hidden');
+        clientFeedbackContainer.classList.add('hidden');
+        if (clientFilterBar) clientFilterBar.classList.add('hidden');
+      });
+
+      // ============================================================
+      // FEEDBACK MODAL LOGIC
+      // ============================================================
+      const feedbackModal = document.getElementById('feedbackModal');
+      const closeFeedbackModalBtn = document.getElementById('closeFeedbackModalBtn');
+      const cancelFeedbackModalBtn = document.getElementById('cancelFeedbackModalBtn');
+      const feedbackForm = document.getElementById('feedbackForm');
+      const fbBlogId = document.getElementById('fbBlogId');
+      const fbAuthorId = document.getElementById('fbAuthorId');
+      const fbAuthorName = document.getElementById('fbAuthorName');
+      const fbBlogTitle = document.getElementById('fbBlogTitle');
+      const fbAuthorSub = document.getElementById('fbAuthorSub');
+      const fbTypeSelect = document.getElementById('fbTypeSelect');
+      const fbRatingVal = document.getElementById('fbRatingVal');
+      const fbMessage = document.getElementById('fbMessage');
+      const starRatingGroup = document.getElementById('starRatingGroup');
+      const starRatingLabel = document.getElementById('starRatingLabel');
+
+      window.openFeedbackModal = function(blogId, encodedTitle, authorId, encodedAuthorName) {
+        const title = decodeURIComponent(encodedTitle);
+        const author = decodeURIComponent(encodedAuthorName);
+        fbBlogId.value = blogId;
+        fbAuthorId.value = authorId || '';
+        fbAuthorName.value = author;
+        fbBlogTitle.textContent = title;
+        fbAuthorSub.textContent = 'Author: ' + author;
+        fbMessage.value = '';
+        fbRatingVal.value = '5';
+        updateStars(5);
+
+        feedbackModal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          feedbackModal.classList.remove('opacity-0');
+          feedbackModal.querySelector('div').classList.remove('scale-95');
+        });
+      };
+
+      function closeFeedbackModal() {
+        feedbackModal.classList.add('opacity-0');
+        feedbackModal.querySelector('div').classList.add('scale-95');
+        setTimeout(() => feedbackModal.classList.add('hidden'), 200);
+      }
+
+      if (closeFeedbackModalBtn) closeFeedbackModalBtn.addEventListener('click', closeFeedbackModal);
+      if (cancelFeedbackModalBtn) cancelFeedbackModalBtn.addEventListener('click', closeFeedbackModal);
+
+      // Star rating picker
+      function updateStars(val) {
+        const stars = starRatingGroup.querySelectorAll('.star-btn');
+        stars.forEach(btn => {
+          const s = parseInt(btn.getAttribute('data-star'));
+          if (s <= val) {
+            btn.textContent = '★';
+            btn.className = 'star-btn text-amber-400 hover:scale-110 transition-transform cursor-pointer text-xl';
+          } else {
+            btn.textContent = '☆';
+            btn.className = 'star-btn text-[var(--border-medium)] hover:scale-110 transition-transform cursor-pointer text-xl';
+          }
+        });
+        const labels = {
+          1: '1 Star (Critical)',
+          2: '2 Stars (Needs Work)',
+          3: '3 Stars (Average)',
+          4: '4 Stars (Good)',
+          5: '5 Stars (Excellent)'
+        };
+        starRatingLabel.textContent = labels[val] || `${val} Stars`;
+      }
+
+      if (starRatingGroup) {
+        starRatingGroup.addEventListener('click', (e) => {
+          const btn = e.target.closest('.star-btn');
+          if (!btn) return;
+          const val = parseInt(btn.getAttribute('data-star'));
+          fbRatingVal.value = String(val);
+          updateStars(val);
+        });
+      }
+
+      // Handle Feedback Submission
+      if (feedbackForm) {
+        feedbackForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const blogId = fbBlogId.value;
+          const authorId = fbAuthorId.value;
+          const authorName = fbAuthorName.value;
+          const title = fbBlogTitle.textContent;
+          const type = fbTypeSelect.value;
+          const rating = parseInt(fbRatingVal.value) || 5;
+          const message = fbMessage.value.trim();
+
+          if (!blogId || !message) {
+            showToast('Please type a feedback message.', 'error');
+            return;
+          }
+
+          const submitBtn = document.getElementById('submitFeedbackBtn');
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span>Submitting...</span>';
+
+          try {
+            const res = await fetch('/api/feedback', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                blogId,
+                blogTitle: title,
+                authorId,
+                authorName,
+                clientId: currentUser.id,
+                clientName: currentUser.name,
+                clientAvatar: currentUser.avatar,
+                type,
+                rating,
+                message
+              })
+            });
+
+            if (!res.ok) throw new Error('Feedback submission failed.');
+
+            const resData = await res.json();
+            allFeedback.unshift(resData.feedback);
+
+            showToast('Feedback submitted to ' + authorName + '!', 'success');
+            closeFeedbackModal();
+            renderClientDashboard();
+            renderAuthorDashboard();
+          } catch (err) {
+            showToast(err.message, 'error');
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>Submit Feedback</span>';
+            if (window.lucide) window.lucide.createIcons();
+          }
+        });
+      }
+
+      // Window global action helpers
+      window.handleAuthorReply = async function(id) {
+        const input = document.getElementById('replyInput-' + id);
+        if (!input) return;
+        const replyText = input.value.trim();
+        if (!replyText) {
+          showToast('Please enter a response message.', 'error');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/feedback/' + encodeURIComponent(id), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              authorReply: replyText,
+              status: 'Reviewed'
+            })
+          });
+          if (!res.ok) throw new Error('Failed to post reply.');
+          const data = await res.json();
+          const idx = allFeedback.findIndex(f => f.id === id);
+          if (idx !== -1) allFeedback[idx] = data.feedback;
+          showToast('Reply published to client reader!', 'success');
+          renderAuthorDashboard();
+          renderClientDashboard();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      };
+
+      window.handleMarkFeedbackStatus = async function(id, newStatus) {
+        try {
+          const res = await fetch('/api/feedback/' + encodeURIComponent(id), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          });
+          if (!res.ok) throw new Error('Failed to update status.');
+          const data = await res.json();
+          const idx = allFeedback.findIndex(f => f.id === id);
+          if (idx !== -1) allFeedback[idx] = data.feedback;
+          showToast('Feedback marked as ' + newStatus, 'info');
+          renderAuthorDashboard();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      };
+
+      // ============================================================
+      // DELETE DISPATCH CONFIRMATION MODAL & ACTIONS
+      // ============================================================
+      let pendingDeleteBlogId = null;
+      let pendingDeleteBlogTitle = '';
+
+      window.promptDeleteAuthorBlog = function(id, encodedTitle) {
+        pendingDeleteBlogId = id;
+        pendingDeleteBlogTitle = decodeURIComponent(encodedTitle || 'Untitled Story');
+
+        const titleEl = document.getElementById('deleteTargetBlogTitle');
+        if (titleEl) titleEl.textContent = `"${pendingDeleteBlogTitle}"`;
+
+        const modal = document.getElementById('dashboardDeleteModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+      };
+
+      function closeDeleteBlogModal() {
+        const modal = document.getElementById('dashboardDeleteModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        pendingDeleteBlogId = null;
+        pendingDeleteBlogTitle = '';
+      }
+
+      const cancelDeleteBlogBtn = document.getElementById('cancelDeleteBlogModalBtn');
+      const confirmDeleteBlogBtn = document.getElementById('confirmDeleteBlogModalBtn');
+
+      if (cancelDeleteBlogBtn) {
+        cancelDeleteBlogBtn.addEventListener('click', closeDeleteBlogModal);
+      }
+
+      if (confirmDeleteBlogBtn) {
+        confirmDeleteBlogBtn.addEventListener('click', async () => {
+          if (!pendingDeleteBlogId) return;
+          const id = pendingDeleteBlogId;
+          const title = pendingDeleteBlogTitle;
+
+          confirmDeleteBlogBtn.disabled = true;
+          confirmDeleteBlogBtn.innerHTML = `
+            <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <span>Deleting...</span>
+          `;
+
+          // Notify backend API
+          try {
+            const token = typeof ChronicleAuth !== 'undefined' ? ChronicleAuth.getToken() : null;
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            await fetch('/api/blogs/' + encodeURIComponent(id), {
+              method: 'DELETE',
+              headers
+            });
+          } catch (err) {
+            console.warn('Backend delete sync note:', err.message);
+          }
+
+          // Update memory, localStorage, and both Author & Client views
+          allBlogs = allBlogs.filter(b => b.id !== id);
+          try {
+            localStorage.setItem('chronicle_articles_v2', JSON.stringify(allBlogs));
+          } catch (e) {}
+
+          confirmDeleteBlogBtn.disabled = false;
+          confirmDeleteBlogBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i><span>Yes, Delete Story</span>';
+          if (window.lucide) window.lucide.createIcons();
+
+          closeDeleteBlogModal();
+          showToast(`Dispatch "${title}" was permanently deleted.`, 'info');
+          renderAuthorDashboard();
+          renderClientDashboard();
+        });
+      }
+
+      // Legacy fallback handler
+      window.handleDeleteAuthorBlog = function(id) {
+        const art = allBlogs.find(b => b.id === id);
+        promptDeleteAuthorBlog(id, art ? encodeURIComponent(art.title) : 'Dispatch');
+      };
+
+      window.handleDiscardDraft = function() {
+        localStorage.removeItem('chronicle_active_draft');
+        renderAuthorDrafts();
+        showToast('Draft discarded.', 'info');
+      };
+
+      window.toggleBookmark = function(id) {
+        const idx = bookmarkedIds.indexOf(id);
+        if (idx === -1) {
+          bookmarkedIds.push(id);
+          showToast('Story added to reading list 🔖', 'success');
+        } else {
+          bookmarkedIds.splice(idx, 1);
+          showToast('Story removed from reading list', 'info');
+        }
+        localStorage.setItem('chronicle_client_bookmarks', JSON.stringify(bookmarkedIds));
+        renderClientDashboard();
+      };
+
+      // Initial fetch
+      await refreshData();
+    });
 
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');

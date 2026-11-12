@@ -69,6 +69,26 @@ var ChronicleAuth = (function () {
     return saveSession(data, true);
   }
 
+  async function loginDemoAuthor() {
+    try {
+      return await loginApi('sarah@chronicle.local', 'password123', true);
+    } catch (e) {
+      const demoUser = {
+        id: '11111111-1111-4111-8111-111111111111',
+        name: 'Sarah Jenkins',
+        email: 'sarah@chronicle.local',
+        role: 'Principal Systems Architect',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+        isLoggedIn: true,
+        loginTime: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(demoUser));
+      updateNavUI();
+      updatePageAuthElements();
+      return demoUser;
+    }
+  }
+
   function login(email, password, remember = true) {
     const cleanEmail = email.trim().toLowerCase();
     const derivedName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -173,36 +193,47 @@ var ChronicleAuth = (function () {
 
     navUserSlots.forEach(slot => {
       if (user && user.isLoggedIn) {
+        const isClient = (user.role || '').toLowerCase().includes('client') || (user.role || '').toLowerCase().includes('reader');
         // Authenticated State in Navbar with responsive click-toggle dropdown
         slot.innerHTML = `
-          <div class="relative auth-dropdown-container">
-            <button type="button" class="auth-profile-trigger flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-[var(--accent-primary)] transition-all cursor-pointer">
-              <img src="${user.avatar}" alt="${user.name}" class="w-8 h-8 rounded-full object-cover border border-[var(--border-subtle)] pointer-events-none">
-              <span class="hidden md:block text-xs font-semibold text-[var(--text-primary)] max-w-[120px] truncate pointer-events-none">${user.name.split(' ')[0]}</span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[var(--text-muted)] hidden md:block pointer-events-none"></i>
-            </button>
-            <div class="auth-profile-dropdown hidden absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-2xl py-2 z-50">
-              <div class="px-4 py-2.5 border-b border-[var(--border-subtle)]">
-                <p class="text-xs font-bold text-[var(--text-primary)] truncate">${user.name}</p>
-                <p class="text-[11px] text-[var(--text-muted)] truncate">${user.email}</p>
-              </div>
-              <a href="dashboard.html" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 text-[var(--accent-primary)]"></i>
-                <span>Author Dashboard</span>
-              </a>
-              <a href="create-blog.html" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]">
-                <i data-lucide="square-pen" class="w-4 h-4 text-[var(--accent-primary)]"></i>
-                <span>Write New Story</span>
-              </a>
-              <a href="index.html#stories" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]">
-                <i data-lucide="newspaper" class="w-4 h-4"></i>
-                <span>Browse Articles Feed</span>
-              </a>
-              <div class="my-1 border-t border-[var(--border-subtle)]"></div>
-              <button type="button" data-auth-logout class="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-left cursor-pointer transition-colors">
-                <i data-lucide="log-out" class="w-4 h-4"></i>
-                <span>Sign Out</span>
+          <div class="flex items-center gap-2.5">
+            <a href="dashboard.html" class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-bold transition-all shadow-xs">
+              <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">${isClient ? 'Client Portal' : 'Dashboard'}</span>
+            </a>
+            <div class="relative auth-dropdown-container">
+              <button type="button" class="auth-profile-trigger flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-[var(--accent-primary)] transition-all cursor-pointer">
+                <img src="${user.avatar}" alt="${user.name}" class="w-8 h-8 rounded-full object-cover border border-[var(--border-subtle)] pointer-events-none">
+                <span class="hidden md:block text-xs font-semibold text-[var(--text-primary)] max-w-[120px] truncate pointer-events-none">${user.name.split(' ')[0]}</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[var(--text-muted)] hidden md:block pointer-events-none"></i>
               </button>
+              <div class="auth-profile-dropdown hidden absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-2xl py-2 z-50">
+                <div class="px-4 py-2.5 border-b border-[var(--border-subtle)]">
+                  <p class="text-xs font-bold text-[var(--text-primary)] truncate">${user.name}</p>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-[10px] px-2 py-0.2 rounded font-semibold ${isClient ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200'}">${user.role || 'Member'}</span>
+                  </div>
+                  <p class="text-[11px] text-[var(--text-muted)] truncate mt-0.5">${user.email}</p>
+                </div>
+                <a href="dashboard.html" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]">
+                  <i data-lucide="layout-dashboard" class="w-4 h-4 text-[var(--accent-primary)]"></i>
+                  <span>${isClient ? 'Client Portal' : 'Author Studio'}</span>
+                </a>
+                ${!isClient ? `
+                <a href="create-blog.html" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]">
+                  <i data-lucide="square-pen" class="w-4 h-4 text-[var(--accent-primary)]"></i>
+                  <span>Write New Story</span>
+                </a>` : ''}
+                <a href="index.html#stories" class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]">
+                  <i data-lucide="newspaper" class="w-4 h-4"></i>
+                  <span>Browse Articles Feed</span>
+                </a>
+                <div class="my-1 border-t border-[var(--border-subtle)]"></div>
+                <button type="button" data-auth-logout class="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-left cursor-pointer transition-colors">
+                  <i data-lucide="log-out" class="w-4 h-4"></i>
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -314,6 +345,7 @@ var ChronicleAuth = (function () {
     getUser,
     login,
     register,
+    loginDemoAuthor,
     loginApi,
     registerApi,
     apiFetch,

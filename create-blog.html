@@ -354,6 +354,71 @@
         area.focus();
       }
 
+      // Check if we are editing an existing blog or resuming a draft
+      const urlParams = new URLSearchParams(window.location.search);
+      const editId = urlParams.get('edit') || urlParams.get('id');
+      const autoSaveStatus = document.getElementById('autoSaveStatus');
+
+      function extractEditableBody(content) {
+        if (!content) return '';
+        return String(content).replace(/^<p class="lead">[\s\S]*?<\/p>\s*/i, '').trim();
+      }
+
+      if (editId) {
+        document.title = 'Edit Dispatch — Chronicle Publication';
+        if (autoSaveStatus) autoSaveStatus.textContent = 'Editing published dispatch';
+        publishBtn.innerHTML = '<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Update</span>';
+        if (window.lucide) window.lucide.createIcons();
+
+        (async () => {
+          let blog = null;
+          try {
+            const data = await ChronicleAuth.apiFetch('/blogs/' + encodeURIComponent(editId));
+            if (data && data.blog) blog = data.blog;
+          } catch (err) {
+            console.warn('API fetch failed, falling back to local storage:', err.message);
+          }
+
+          if (!blog) {
+            try {
+              const raw = localStorage.getItem('chronicle_articles_v2');
+              if (raw) {
+                blog = JSON.parse(raw).find(a => a.id === editId);
+              }
+            } catch (e) {}
+          }
+
+          if (blog) {
+            titleInput.value = blog.title || '';
+            excerptInput.value = blog.excerpt || '';
+            bodyInput.value = extractEditableBody(blog.content);
+            if (blog.category) categorySelect.value = blog.category;
+            tagsInput.value = Array.isArray(blog.tags) ? blog.tags.join(', ') : '';
+            coverInput.value = blog.coverImage || PRESETS[0];
+            coverPreviewImg.src = coverInput.value;
+            updateStats();
+          } else {
+            showToast('Dispatch could not be loaded.', 'error');
+          }
+        })();
+      } else {
+        // Load active local draft if present
+        try {
+          const rawDraft = localStorage.getItem('chronicle_active_draft');
+          if (rawDraft) {
+            const draft = JSON.parse(rawDraft);
+            if (draft.title) titleInput.value = draft.title;
+            if (draft.excerpt) excerptInput.value = draft.excerpt;
+            if (draft.body) bodyInput.value = draft.body;
+            if (draft.category) categorySelect.value = draft.category;
+            if (draft.tags) tagsInput.value = draft.tags;
+            updateStats();
+          }
+        } catch (e) {
+          console.warn('Could not load draft', e);
+        }
+      }
+
       // Save Draft
       saveDraftBtn.addEventListener('click', () => {
         const draft = {
@@ -368,7 +433,7 @@
         showToast('Draft successfully cached locally at ' + draft.savedAt, 'info');
       });
 
-      // Publish Story
+      // Publish or Update Story
       publishBtn.addEventListener('click', async () => {
         const title = titleInput.value.trim();
         const excerpt = excerptInput.value.trim();
@@ -395,8 +460,44 @@
         if (body.startsWith('<')) formattedContent += body;
         else formattedContent += `<p>${body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
 
-        const newPost = {
-          id: 'post-' + Date.now(),
+        // Persist to backend (auto-signs in demo author if guest)
+        if (!ChronicleAuth.getToken()) {
+          try {
+            await ChronicleAuth.loginDemoAuthor();
+            showToast('Signed in as Demo Author for publishing.', 'info');
+          } catch (e) {
+            showToast('Please log in to publish.', 'error');
+            setTimeout(() => { window.location.href = 'login.html'; }, 900);
+            return;
+          }
+        }
+
+        publishBtn.disabled = true;
+        publishBtn.innerHTML = editId ? '<span>Updating...</span>' : '<span>Publishing...</span>';
+
+        let savedBlog = null;
+        try {
+          const data = await ChronicleAuth.apiFetch(
+            editId ? '/blogs/' + encodeURIComponent(editId) : '/blogs',
+            {
+              method: editId ? 'PUT' : 'POST',
+              body: JSON.stringify({
+                title,
+                excerpt,
+                content: formattedContent,
+                category,
+                coverImage: cover,
+                tags: tags.length ? tags : [category]
+              })
+            }
+          );
+          if (data && data.blog) savedBlog = data.blog;
+        } catch (err) {
+          console.warn('Backend API notification, saving locally:', err.message);
+        }
+
+        const newPost = savedBlog || {
+          id: editId || 'post-' + Date.now(),
           title: title,
           slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           excerpt: excerpt || title,
@@ -419,31 +520,6 @@
           comments: []
         };
 
-        // Persist to backend (requires login)
-        if (!ChronicleAuth.getToken()) {
-          showToast('Please log in to publish.', 'error');
-          setTimeout(() => { window.location.href = 'login.html'; }, 900);
-          return;
-        }
-        publishBtn.disabled = true;
-        publishBtn.innerHTML = '<span>Publishing...</span>';
-        try {
-          const data = await ChronicleAuth.apiFetch('/blogs', {
-            method: 'POST',
-            body: JSON.stringify({
-              title, excerpt, content: formattedContent, category, coverImage: cover,
-              tags: tags.length ? tags : [category]
-            })
-          });
-          newPost.id = data.blog.id;
-        } catch (err) {
-          publishBtn.disabled = false;
-          publishBtn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>Publish</span>';
-          if (window.lucide) window.lucide.createIcons();
-          showToast(err.message, 'error');
-          return;
-        }
-
         // Cache locally so the feed renders it immediately
         let existing = [];
         try {
@@ -453,11 +529,17 @@
           existing = [...INITIAL_ARTICLES];
         }
 
-        existing.unshift(newPost);
+        if (editId) {
+          const idx = existing.findIndex(a => a.id === editId);
+          if (idx !== -1) existing[idx] = newPost;
+          else existing.unshift(newPost);
+        } else {
+          existing.unshift(newPost);
+          localStorage.removeItem('chronicle_active_draft');
+        }
         localStorage.setItem('chronicle_articles_v2', JSON.stringify(existing));
-        localStorage.removeItem('chronicle_active_draft');
 
-        showToast('🎉 Dispatch published live!', 'success');
+        showToast(editId ? '✨ Dispatch updated successfully!' : '🎉 Dispatch published live!', 'success');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
         }, 800);

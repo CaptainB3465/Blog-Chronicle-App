@@ -21,8 +21,12 @@
   let likedArticles = loadFromStorage(STORAGE_KEYS.LIKES, []);
   let followedAuthors = loadFromStorage(STORAGE_KEYS.AUTHORS_FOLLOWED, []);
   let currentCategory = 'All Stories';
+  let currentTag = 'All';
+  let currentReadingTime = 'all';
+  let currentSearchQuery = '';
   let currentSort = 'latest';
-  let viewMode = 'grid'; // 'grid' | 'list'
+  let viewMode = 'grid'; // 'grid' | 'list' | 'manage'
+  let pendingDeleteId = null;
   let currentArticle = null;
   let isAudioPlaying = false;
 
@@ -51,6 +55,7 @@
     mobileBookmarksLink: document.getElementById('mobileBookmarksLink'),
     mobileBookmarkCount: document.getElementById('mobileBookmarkCount'),
     mobileWriteBtn: document.getElementById('mobileWriteBtn'),
+    headerSearchInput: document.getElementById('headerSearchInput'),
 
     // Bookmarks Drawer
     openBookmarksBtn: document.getElementById('openBookmarksBtn'),
@@ -70,7 +75,7 @@
     searchInput: document.getElementById('searchInput'),
     searchResultsList: document.getElementById('searchResultsList'),
 
-    // Write Modal
+    // Write / Edit Modal
     openWriteModalBtn: document.getElementById('openWriteModalBtn'),
     writeStoryModal: document.getElementById('writeStoryModal'),
     closeWriteModalBtn: document.getElementById('closeWriteModalBtn'),
@@ -78,14 +83,40 @@
     writeStoryForm: document.getElementById('writeStoryForm'),
     randomCoverBtn: document.getElementById('randomCoverBtn'),
     newPostCover: document.getElementById('newPostCover'),
+    writeModalHeading: document.getElementById('writeModalHeading'),
+    writeModalSubheading: document.getElementById('writeModalSubheading'),
+    writeModalSubmitBtn: document.getElementById('writeModalSubmitBtn'),
+    writeModalSubmitLabel: document.getElementById('writeModalSubmitLabel'),
+    editPostId: document.getElementById('editPostId'),
+    writeWordCount: document.getElementById('writeWordCount'),
+    writeReadTime: document.getElementById('writeReadTime'),
 
-    // Feed Controls & Layout
+    // Delete Confirmation Modal
+    deleteConfirmModal: document.getElementById('deleteConfirmModal'),
+    deleteConfirmMessage: document.getElementById('deleteConfirmMessage'),
+    cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
+    confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+
+    // Feed Controls, Filters & Layout
     heroSection: document.getElementById('heroSection'),
     categoriesRail: document.getElementById('categoriesRail'),
+    tagsRail: document.getElementById('tagsRail'),
+    feedSearchInput: document.getElementById('feedSearchInput'),
+    clearFeedSearchBtn: document.getElementById('clearFeedSearchBtn'),
+    readTimeFilter: document.getElementById('readTimeFilter'),
     sortSelect: document.getElementById('sortSelect'),
     viewGridBtn: document.getElementById('viewGridBtn'),
     viewListBtn: document.getElementById('viewListBtn'),
+    viewManageBtn: document.getElementById('viewManageBtn'),
+    feedComposeBtn: document.getElementById('feedComposeBtn'),
+    managerNewPostBtn: document.getElementById('managerNewPostBtn'),
+    activeFiltersSummaryBar: document.getElementById('activeFiltersSummaryBar'),
+    feedResultCount: document.getElementById('feedResultCount'),
+    activeFilterChips: document.getElementById('activeFilterChips'),
+    clearAllFiltersBtn: document.getElementById('clearAllFiltersBtn'),
     articlesFeed: document.getElementById('articlesFeed'),
+    blogManagerView: document.getElementById('blogManagerView'),
+    blogManagerTableBody: document.getElementById('blogManagerTableBody'),
     emptyFeedState: document.getElementById('emptyFeedState'),
     resetFiltersBtn: document.getElementById('resetFiltersBtn'),
     loadMoreBtn: document.getElementById('loadMoreBtn'),
@@ -165,6 +196,7 @@
     window.addEventListener('hashchange', applyViewModeFromHash);
     renderHero();
     renderCategories();
+    renderTagsRail();
     renderArticles();
     renderTrendingWidget();
     renderTopicsCloud();
@@ -181,17 +213,21 @@
       const res = await fetch('/api/blogs');
       if (!res.ok) return;
       const data = await res.json();
-      const remote = (Array.isArray(data.blogs) ? data.blogs : []).map(b => ({
-        ...b,
-        coverImage: b.coverImage || PRESET_COVERS[0]
-      }));
-      articles = remote;
-      saveArticles();
-      renderHero();
-      renderArticles();
-      renderTrendingWidget();
-      renderAuthors();
-      refreshIcons();
+      if (Array.isArray(data.blogs) && data.blogs.length > 0) {
+        const remote = data.blogs.map(b => ({
+          ...b,
+          coverImage: b.coverImage || PRESET_COVERS[0]
+        }));
+        articles = remote;
+        saveArticles();
+        renderHero();
+        renderCategories();
+        renderTagsRail();
+        renderArticles();
+        renderTrendingWidget();
+        renderAuthors();
+        refreshIcons();
+      }
     } catch (e) {
       console.warn('Backend unavailable, using local articles', e);
     }
@@ -205,16 +241,16 @@
       const stored = localStorage.getItem(STORAGE_KEYS.ARTICLES);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          // Filter out legacy demo articles
-          const realArticles = parsed.filter(a => !/^post-[1-7]$/.test(a.id) && a.author && a.author.name !== 'Dr. Elena Rostova');
-          return realArticles;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
         }
       }
     } catch (e) {
       console.warn('Could not load stored articles', e);
     }
-    return [];
+    return (typeof INITIAL_ARTICLES !== 'undefined' && Array.isArray(INITIAL_ARTICLES) && INITIAL_ARTICLES.length > 0)
+      ? [...INITIAL_ARTICLES]
+      : [];
   }
 
   function saveArticles() {
@@ -385,11 +421,19 @@
   function renderCategories() {
     if (!el.categoriesRail) return;
 
-    el.categoriesRail.innerHTML = CATEGORIES.map(cat => `
-      <button class="category-pill px-4 py-2 rounded-full text-xs font-semibold border ${cat === currentCategory ? 'active bg-[var(--text-primary)] text-[var(--bg-surface)] border-[var(--text-primary)]' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--text-primary)]'}" data-category="${cat}">
-        ${cat}
-      </button>
-    `).join('');
+    el.categoriesRail.innerHTML = CATEGORIES.map(cat => {
+      const count = cat === 'All Stories'
+        ? articles.length
+        : articles.filter(a => (a.category || '').toLowerCase() === cat.toLowerCase()).length;
+
+      const isActive = cat.toLowerCase() === currentCategory.toLowerCase();
+      return `
+        <button class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${isActive ? 'active bg-[var(--text-primary)] text-[var(--bg-surface)] border-[var(--text-primary)] shadow-xs' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--text-primary)]'}" data-category="${cat}">
+          <span>${cat}</span>
+          <span class="ml-1 text-[10px] opacity-75">(${count})</span>
+        </button>
+      `;
+    }).join('');
 
     // Attach click handlers
     el.categoriesRail.querySelectorAll('.category-pill').forEach(btn => {
@@ -403,7 +447,7 @@
     // Also populate mobile drawer categories
     if (el.mobileCategoriesList) {
       el.mobileCategoriesList.innerHTML = CATEGORIES.filter(c => c !== 'All Stories').map(c => `
-        <button class="text-left px-3 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)] transition-colors" data-mobile-cat="${c}">
+        <button class="text-left px-3 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)] transition-colors cursor-pointer" data-mobile-cat="${c}">
           ${c}
         </button>
       `).join('');
@@ -419,6 +463,124 @@
     }
   }
 
+  function renderTagsRail() {
+    if (!el.tagsRail) return;
+    const tagSet = new Set();
+    articles.forEach(a => {
+      if (Array.isArray(a.tags)) {
+        a.tags.forEach(t => {
+          if (t && String(t).trim()) tagSet.add(String(t).trim().replace(/^#/, ''));
+        });
+      }
+    });
+
+    const tags = Array.from(tagSet);
+    const isAll = currentTag === 'All';
+
+    const allBtn = `
+      <button class="px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${isAll ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] shadow-xs' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--text-primary)]'}" data-tag="All">
+        All
+      </button>
+    `;
+
+    const tagButtons = tags.map(t => {
+      const active = currentTag.toLowerCase() === t.toLowerCase();
+      return `
+        <button class="px-2.5 py-1 rounded-full text-xs font-medium border transition-all cursor-pointer whitespace-nowrap ${active ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] shadow-xs' : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--text-primary)]'}" data-tag="${t}">
+          #${t}
+        </button>
+      `;
+    }).join('');
+
+    el.tagsRail.innerHTML = allBtn + tagButtons;
+
+    el.tagsRail.querySelectorAll('[data-tag]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentTag = btn.getAttribute('data-tag');
+        renderTagsRail();
+        renderArticles();
+      });
+    });
+  }
+
+  function renderActiveFilters(filteredCount, totalCount) {
+    if (el.feedResultCount) {
+      if (currentSearchQuery || currentCategory !== 'All Stories' || currentTag !== 'All' || currentReadingTime !== 'all') {
+        el.feedResultCount.textContent = `Showing ${filteredCount} of ${totalCount} stories`;
+      } else {
+        el.feedResultCount.textContent = `${totalCount} dispatches published`;
+      }
+    }
+
+    if (!el.activeFilterChips) return;
+    const chips = [];
+
+    if (currentCategory !== 'All Stories') {
+      chips.push(`
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 shadow-xs">
+          <span>Topic: ${currentCategory}</span>
+          <button type="button" class="cursor-pointer hover:opacity-75 font-bold" data-clear="category" title="Clear category filter">✕</button>
+        </span>
+      `);
+    }
+
+    if (currentTag !== 'All') {
+      chips.push(`
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 shadow-xs">
+          <span>Tag: #${currentTag}</span>
+          <button type="button" class="cursor-pointer hover:opacity-75 font-bold" data-clear="tag" title="Clear tag filter">✕</button>
+        </span>
+      `);
+    }
+
+    if (currentReadingTime !== 'all') {
+      const label = currentReadingTime === 'quick' ? '< 4 min' : currentReadingTime === 'medium' ? '4-6 min' : '7+ min';
+      chips.push(`
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 shadow-xs">
+          <span>Length: ${label}</span>
+          <button type="button" class="cursor-pointer hover:opacity-75 font-bold" data-clear="readTime" title="Clear read time filter">✕</button>
+        </span>
+      `);
+    }
+
+    if (currentSearchQuery && currentSearchQuery.trim()) {
+      chips.push(`
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 shadow-xs">
+          <span>Search: "${currentSearchQuery.trim()}"</span>
+          <button type="button" class="cursor-pointer hover:opacity-75 font-bold" data-clear="search" title="Clear search query">✕</button>
+        </span>
+      `);
+    }
+
+    el.activeFilterChips.innerHTML = chips.join('');
+
+    const hasActiveFilters = chips.length > 0;
+    if (el.clearAllFiltersBtn) {
+      el.clearAllFiltersBtn.classList.toggle('hidden', !hasActiveFilters);
+    }
+
+    el.activeFilterChips.querySelectorAll('[data-clear]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.getAttribute('data-clear');
+        if (type === 'category') currentCategory = 'All Stories';
+        if (type === 'tag') currentTag = 'All';
+        if (type === 'readTime') {
+          currentReadingTime = 'all';
+          if (el.readTimeFilter) el.readTimeFilter.value = 'all';
+        }
+        if (type === 'search') {
+          currentSearchQuery = '';
+          if (el.feedSearchInput) el.feedSearchInput.value = '';
+          if (el.headerSearchInput) el.headerSearchInput.value = '';
+          if (el.clearFeedSearchBtn) el.clearFeedSearchBtn.classList.add('hidden');
+        }
+        renderCategories();
+        renderTagsRail();
+        renderArticles();
+      });
+    });
+  }
+
   // ============================================================
   // FEED RENDERING
   // ============================================================
@@ -427,7 +589,37 @@
 
     // Category filter
     if (currentCategory !== 'All Stories') {
-      result = result.filter(a => a.category.toLowerCase() === currentCategory.toLowerCase());
+      result = result.filter(a => (a.category || '').toLowerCase() === currentCategory.toLowerCase());
+    }
+
+    // Tag filter
+    if (currentTag !== 'All') {
+      const cleanTag = currentTag.toLowerCase().replace(/^#/, '');
+      result = result.filter(a =>
+        Array.isArray(a.tags) && a.tags.some(t => String(t).toLowerCase().replace(/^#/, '') === cleanTag)
+      );
+    }
+
+    // Reading time filter
+    if (currentReadingTime === 'quick') {
+      result = result.filter(a => (a.readingTime || 1) < 4);
+    } else if (currentReadingTime === 'medium') {
+      result = result.filter(a => (a.readingTime || 1) >= 4 && (a.readingTime || 1) <= 6);
+    } else if (currentReadingTime === 'long') {
+      result = result.filter(a => (a.readingTime || 1) >= 7);
+    }
+
+    // Inline Search filter
+    if (currentSearchQuery && currentSearchQuery.trim()) {
+      const q = currentSearchQuery.trim().toLowerCase();
+      result = result.filter(a =>
+        (a.title && a.title.toLowerCase().includes(q)) ||
+        (a.excerpt && a.excerpt.toLowerCase().includes(q)) ||
+        (a.content && a.content.toLowerCase().includes(q)) ||
+        (a.category && a.category.toLowerCase().includes(q)) ||
+        (a.author && a.author.name && a.author.name.toLowerCase().includes(q)) ||
+        (Array.isArray(a.tags) && a.tags.some(t => String(t).toLowerCase().includes(q)))
+      );
     }
 
     // Sort order
@@ -436,16 +628,114 @@
     } else if (currentSort === 'popular') {
       result.sort((a, b) => (b.claps || 0) - (a.claps || 0));
     } else if (currentSort === 'readTime') {
-      result.sort((a, b) => a.readingTime - b.readingTime);
+      result.sort((a, b) => (a.readingTime || 1) - (b.readingTime || 1));
+    } else if (currentSort === 'readTimeLong') {
+      result.sort((a, b) => (b.readingTime || 1) - (a.readingTime || 1));
+    } else if (currentSort === 'titleAZ') {
+      result.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
 
     return result;
   }
 
-  function renderArticles() {
-    if (!el.articlesFeed) return;
+  function renderBlogManagerTable(items) {
+    if (!el.blogManagerTableBody) return;
+    if (items.length === 0) {
+      el.blogManagerTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-12 text-center text-xs text-[var(--text-muted)]">
+            <div class="max-w-xs mx-auto space-y-2">
+              <p class="font-bold text-[var(--text-primary)]">No dispatches match criteria</p>
+              <p>Adjust your search filters or create a new blog post.</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
+    el.blogManagerTableBody.innerHTML = items.map(art => `
+      <tr class="hover:bg-[var(--bg-subtle)]/50 transition-colors group">
+        <td class="py-3 px-4">
+          <div class="flex items-center gap-3">
+            <img src="${art.coverImage || PRESET_COVERS[0]}" alt="${art.title}" class="w-12 h-12 rounded-lg object-cover shrink-0 bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+            <div class="min-w-0">
+              <a href="blog.html?id=${art.id}" class="font-bold font-serif-reading text-sm text-[var(--text-primary)] hover:text-[var(--accent-primary)] line-clamp-1 transition-colors">
+                ${art.title}
+              </a>
+              <p class="text-[11px] text-[var(--text-muted)] line-clamp-1 mt-0.5">${art.excerpt}</p>
+            </div>
+          </div>
+        </td>
+        <td class="py-3 px-4 whitespace-nowrap">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--accent-surface)] text-[var(--accent-primary)]">
+            ${art.category}
+          </span>
+        </td>
+        <td class="py-3 px-4 whitespace-nowrap">
+          <div class="flex items-center gap-2">
+            <img src="${art.author.avatar}" alt="${art.author.name}" class="w-5 h-5 rounded-full object-cover">
+            <span class="font-medium text-xs text-[var(--text-secondary)]">${art.author.name}</span>
+          </div>
+        </td>
+        <td class="py-3 px-4 whitespace-nowrap text-[var(--text-muted)]">
+          <div class="font-medium">${art.readingTime} min read</div>
+          <div class="text-[10px] text-[var(--text-muted)]">${art.publishedAt}</div>
+        </td>
+        <td class="py-3 px-4 whitespace-nowrap text-[var(--text-muted)]">
+          <span class="inline-flex items-center gap-1">
+            <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500 fill-rose-500"></i>
+            <span class="font-semibold text-xs">${art.claps || 0}</span>
+          </span>
+        </td>
+        <td class="py-3 px-4 text-right whitespace-nowrap">
+          <div class="flex items-center justify-end gap-1.5">
+            <a href="blog.html?id=${art.id}" class="p-1.5 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Read story">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </a>
+            <button class="table-edit-btn p-1.5 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors cursor-pointer" data-id="${art.id}" title="Edit dispatch">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            </button>
+            <button class="table-delete-btn p-1.5 rounded-lg bg-[var(--bg-subtle)] hover:bg-rose-50 dark:hover:bg-rose-950/30 text-[var(--text-muted)] hover:text-rose-500 transition-colors cursor-pointer" data-id="${art.id}" title="Delete dispatch">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    el.blogManagerTableBody.querySelectorAll('.table-edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditModal(btn.getAttribute('data-id'));
+      });
+    });
+
+    el.blogManagerTableBody.querySelectorAll('.table-delete-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        promptDeleteArticle(btn.getAttribute('data-id'));
+      });
+    });
+  }
+
+  function renderArticles() {
     const items = getFilteredAndSortedArticles();
+    renderActiveFilters(items.length, articles.length);
+
+    if (viewMode === 'manage') {
+      if (el.articlesFeed) el.articlesFeed.classList.add('hidden');
+      if (el.blogManagerView) el.blogManagerView.classList.remove('hidden');
+      if (el.emptyFeedState) el.emptyFeedState.classList.add('hidden');
+      renderBlogManagerTable(items);
+      refreshIcons();
+      return;
+    }
+
+    if (el.blogManagerView) el.blogManagerView.classList.add('hidden');
+    if (el.articlesFeed) el.articlesFeed.classList.remove('hidden');
+
+    if (!el.articlesFeed) return;
 
     if (items.length === 0) {
       el.articlesFeed.innerHTML = '';
@@ -465,17 +755,18 @@
     el.articlesFeed.innerHTML = items.map(art => {
       const isSaved = bookmarks.includes(art.id);
       const isLiked = likedArticles.includes(art.id);
+      const tagsList = Array.isArray(art.tags) ? art.tags.slice(0, 3) : [];
 
       if (viewMode === 'grid') {
         return `
-          <div class="story-card rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" data-id="${art.id}">
+          <div class="story-card rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-medium)] transition-all shadow-xs" data-id="${art.id}">
             <!-- Card Image -->
-            <div class="story-card-image-wrap relative h-48 w-full bg-[var(--bg-subtle)]">
-              <img src="${art.coverImage || PRESET_COVERS[0]}" alt="${art.title}" class="story-card-image w-full h-full object-cover">
+            <div class="story-card-image-wrap relative h-48 w-full bg-[var(--bg-subtle)] overflow-hidden">
+              <img src="${art.coverImage || PRESET_COVERS[0]}" alt="${art.title}" class="story-card-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
               <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[var(--bg-surface)]/90 backdrop-blur-md text-[var(--accent-primary)] shadow-sm">
                 ${art.category}
               </span>
-              <button class="bookmark-btn absolute top-3 right-3 w-8 h-8 rounded-full bg-[var(--bg-surface)]/90 backdrop-blur-md flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent-primary)] shadow-sm transition-colors" data-id="${art.id}" aria-label="Bookmark">
+              <button class="bookmark-btn absolute top-3 right-3 w-8 h-8 rounded-full bg-[var(--bg-surface)]/90 backdrop-blur-md flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent-primary)] shadow-sm transition-colors cursor-pointer" data-id="${art.id}" aria-label="Bookmark">
                 <i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-[var(--accent-primary)] text-[var(--accent-primary)]' : ''}"></i>
               </button>
             </div>
@@ -488,30 +779,31 @@
                   <span>•</span>
                   <span>${art.readingTime} min read</span>
                 </div>
-                <h3 class="text-xl font-bold font-serif-reading leading-snug text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors mb-2">
+                <h3 class="text-xl font-bold font-serif-reading leading-snug text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors mb-2 line-clamp-2">
                   ${art.title}
                 </h3>
-                <p class="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
+                <p class="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed mb-3">
                   ${art.excerpt}
                 </p>
+
+                <!-- Card Tag Chips -->
+                <div class="flex flex-wrap gap-1 mb-2">
+                  ${tagsList.map(t => `<button type="button" class="card-tag-btn px-2 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] border border-transparent transition-colors" data-tag="${t}">#${t}</button>`).join('')}
+                </div>
               </div>
 
               <!-- Author & Action Footer -->
-              <div class="mt-5 pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <img src="${art.author.avatar}" alt="${art.author.name}" class="w-7 h-7 rounded-full object-cover border border-[var(--border-subtle)]">
-                  <span class="text-xs font-semibold text-[var(--text-primary)]">${art.author.name}</span>
+              <div class="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <img src="${art.author.avatar}" alt="${art.author.name}" class="w-6 h-6 rounded-full object-cover border border-[var(--border-subtle)]">
+                  <span class="text-xs font-semibold text-[var(--text-primary)] truncate max-w-[90px] sm:max-w-[120px]">${art.author.name}</span>
                 </div>
                 
-                <div class="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                  <button class="card-clap-btn flex items-center gap-1 hover:text-[var(--accent-primary)] transition-colors" data-id="${art.id}">
+                <div class="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                  <button class="card-clap-btn flex items-center gap-1 hover:text-[var(--accent-primary)] transition-colors cursor-pointer p-1" data-id="${art.id}" title="Appreciate Story">
                     <i data-lucide="heart" class="w-3.5 h-3.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}"></i>
                     <span>${art.claps || 0}</span>
                   </button>
-                  <span class="flex items-center gap-1">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                    <span>${(art.comments || []).length}</span>
-                  </span>
                 </div>
               </div>
             </div>
@@ -520,7 +812,7 @@
       } else {
         // List View Mode
         return `
-          <div class="story-card rounded-2xl p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-5 group cursor-pointer" data-id="${art.id}">
+          <div class="story-card rounded-2xl p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-5 group cursor-pointer border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-medium)] transition-all shadow-xs" data-id="${art.id}">
             <div class="flex-1">
               <div class="flex items-center gap-3 text-xs mb-2">
                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[var(--accent-surface)] text-[var(--accent-primary)]">${art.category}</span>
@@ -531,17 +823,22 @@
               <h3 class="text-lg sm:text-xl font-bold font-serif-reading text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors mb-2">
                 ${art.title}
               </h3>
-              <p class="text-xs text-[var(--text-secondary)] line-clamp-2 max-w-xl">
+              <p class="text-xs text-[var(--text-secondary)] line-clamp-2 max-w-xl mb-3">
                 ${art.excerpt}
               </p>
+
+              <!-- List Tag Chips -->
+              <div class="flex flex-wrap gap-1 mb-3">
+                ${tagsList.map(t => `<button type="button" class="card-tag-btn px-2 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] border border-transparent transition-colors" data-tag="${t}">#${t}</button>`).join('')}
+              </div>
               
-              <div class="mt-4 flex items-center gap-4 text-xs text-[var(--text-muted)]">
+              <div class="flex items-center gap-4 text-xs text-[var(--text-muted)]">
                 <div class="flex items-center gap-2">
-                  <img src="${art.author.avatar}" alt="${art.author.name}" class="w-6 h-6 rounded-full object-cover">
+                  <img src="${art.author.avatar}" alt="${art.author.name}" class="w-5 h-5 rounded-full object-cover">
                   <span class="font-medium text-[var(--text-primary)]">${art.author.name}</span>
                 </div>
                 <span>•</span>
-                <button class="card-clap-btn flex items-center gap-1 hover:text-[var(--accent-primary)]" data-id="${art.id}">
+                <button class="card-clap-btn flex items-center gap-1 hover:text-[var(--accent-primary)] cursor-pointer" data-id="${art.id}" title="Appreciate Story">
                   <i data-lucide="heart" class="w-3.5 h-3.5 ${isLiked ? 'fill-red-500 text-red-500' : ''}"></i>
                   <span>${art.claps || 0} claps</span>
                 </button>
@@ -549,9 +846,9 @@
             </div>
 
             <!-- List Thumbnail -->
-            <div class="w-full sm:w-44 h-36 rounded-xl overflow-hidden shrink-0 bg-[var(--bg-subtle)] relative">
+            <div class="w-full sm:w-44 h-36 rounded-xl overflow-hidden shrink-0 bg-[var(--bg-subtle)] relative border border-[var(--border-subtle)]">
               <img src="${art.coverImage || PRESET_COVERS[0]}" alt="${art.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <button class="bookmark-btn absolute top-2 right-2 w-7 h-7 rounded-full bg-[var(--bg-surface)]/90 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent-primary)] shadow-sm" data-id="${art.id}">
+              <button class="bookmark-btn absolute top-2 right-2 w-7 h-7 rounded-full bg-[var(--bg-surface)]/90 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent-primary)] shadow-sm cursor-pointer" data-id="${art.id}">
                 <i data-lucide="bookmark" class="w-3.5 h-3.5 ${isSaved ? 'fill-[var(--accent-primary)] text-[var(--accent-primary)]' : ''}"></i>
               </button>
             </div>
@@ -563,10 +860,24 @@
     // Attach card event listeners
     el.articlesFeed.querySelectorAll('.story-card').forEach(card => {
       card.addEventListener('click', (e) => {
-        // Prevent opening reader if bookmark or clap clicked
-        if (e.target.closest('.bookmark-btn') || e.target.closest('.card-clap-btn')) return;
+        // Prevent opening reader if bookmark, clap, or tag was clicked
+        if (
+          e.target.closest('.bookmark-btn') ||
+          e.target.closest('.card-clap-btn') ||
+          e.target.closest('.card-tag-btn')
+        ) return;
         const id = card.getAttribute('data-id');
         window.location.href = 'blog.html?id=' + encodeURIComponent(id);
+      });
+    });
+
+    // Tag button click listeners inside cards
+    el.articlesFeed.querySelectorAll('.card-tag-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentTag = btn.getAttribute('data-tag');
+        renderTagsRail();
+        renderArticles();
       });
     });
 
@@ -1146,91 +1457,249 @@
   }
 
   // ============================================================
-  // WRITE STORY / CREATE NEW ARTICLE
+  // WRITE & EDIT STORY / CRUD OPERATIONS
   // ============================================================
+  function updateWriteStats() {
+    const title = (document.getElementById('newPostTitle')?.value || '');
+    const excerpt = (document.getElementById('newPostExcerpt')?.value || '');
+    const body = (document.getElementById('newPostContent')?.value || '');
+    const words = (title + ' ' + excerpt + ' ' + body).trim() ? (title + ' ' + excerpt + ' ' + body).trim().split(/\s+/).length : 0;
+    const readTime = Math.max(1, Math.round(words / 180));
+    if (el.writeWordCount) el.writeWordCount.textContent = `${words} words`;
+    if (el.writeReadTime) el.writeReadTime.textContent = `${readTime} min read`;
+  }
+
   function openWriteModal() {
+    if (el.editPostId) el.editPostId.value = '';
+    if (el.writeModalHeading) el.writeModalHeading.textContent = 'Compose New Dispatch';
+    if (el.writeModalSubheading) el.writeModalSubheading.textContent = 'Share your insights with the Chronicle community';
+    if (el.writeModalSubmitLabel) el.writeModalSubmitLabel.textContent = 'Publish Story';
+    if (el.writeStoryForm) el.writeStoryForm.reset();
+    pickPresetCover();
+    updateWriteStats();
     el.writeStoryModal.classList.add('active');
     document.body.style.overflow = 'hidden';
-    if (!el.newPostCover.value) {
-      pickPresetCover();
-    }
+  }
+
+  function openEditModal(id) {
+    const article = articles.find(a => a.id === id);
+    if (!article) return;
+
+    if (el.editPostId) el.editPostId.value = article.id;
+    if (el.writeModalHeading) el.writeModalHeading.textContent = 'Edit Dispatch';
+    if (el.writeModalSubheading) el.writeModalSubheading.textContent = 'Update headline, category, tags, or content';
+    if (el.writeModalSubmitLabel) el.writeModalSubmitLabel.textContent = 'Save Changes';
+
+    const titleInput = document.getElementById('newPostTitle');
+    const catInput = document.getElementById('newPostCategory');
+    const tagsInput = document.getElementById('newPostTags');
+    const excerptInput = document.getElementById('newPostExcerpt');
+    const contentInput = document.getElementById('newPostContent');
+
+    if (titleInput) titleInput.value = article.title || '';
+    if (catInput) catInput.value = article.category || 'Engineering';
+    if (el.newPostCover) el.newPostCover.value = article.coverImage || '';
+    if (tagsInput) tagsInput.value = Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || '');
+    if (excerptInput) excerptInput.value = article.excerpt || '';
+
+    // Strip lead wrapper if present
+    const rawContent = (article.content || '').replace(/^<p class="lead">[\s\S]*?<\/p>\s*/i, '').trim();
+    if (contentInput) contentInput.value = rawContent || article.content || '';
+
+    updateWriteStats();
+    el.writeStoryModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeWriteModal() {
     el.writeStoryModal.classList.remove('active');
-    if (el.readerModal.classList.contains('hidden')) {
+    if (el.readerModal.classList.contains('hidden') && (!el.deleteConfirmModal || el.deleteConfirmModal.classList.contains('hidden'))) {
       document.body.style.overflow = '';
     }
   }
 
   function pickPresetCover() {
     const random = PRESET_COVERS[Math.floor(Math.random() * PRESET_COVERS.length)];
-    el.newPostCover.value = random;
+    if (el.newPostCover) el.newPostCover.value = random;
   }
 
-  function handleCreateStory(e) {
+  // DELETE MODAL HELPERS
+  function promptDeleteArticle(id) {
+    const article = articles.find(a => a.id === id);
+    if (!article) return;
+    pendingDeleteId = id;
+    if (el.deleteConfirmMessage) {
+      el.deleteConfirmMessage.innerHTML = `Are you sure you want to permanently delete <strong class="text-[var(--text-primary)]">"${article.title}"</strong>? This will remove the story from the publication.`;
+    }
+    if (el.deleteConfirmModal) {
+      el.deleteConfirmModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeDeleteModal() {
+    pendingDeleteId = null;
+    if (el.deleteConfirmModal) {
+      el.deleteConfirmModal.classList.add('hidden');
+      if (el.readerModal.classList.contains('hidden') && !el.writeStoryModal.classList.contains('active')) {
+        document.body.style.overflow = '';
+      }
+    }
+  }
+
+  async function confirmDeleteArticle() {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+
+    if (el.confirmDeleteBtn) {
+      el.confirmDeleteBtn.disabled = true;
+      el.confirmDeleteBtn.textContent = 'Deleting...';
+    }
+
+    try {
+      const token = typeof ChronicleAuth !== 'undefined' ? ChronicleAuth.getToken() : null;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      await fetch('/api/blogs/' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers
+      });
+    } catch (err) {
+      console.warn('Backend delete notification:', err.message);
+    }
+
+    articles = articles.filter(a => a.id !== id);
+    saveArticles();
+
+    if (el.confirmDeleteBtn) {
+      el.confirmDeleteBtn.disabled = false;
+      el.confirmDeleteBtn.textContent = 'Yes, Delete Story';
+    }
+
+    closeDeleteModal();
+    renderHero();
+    renderCategories();
+    renderTagsRail();
+    renderArticles();
+    renderTrendingWidget();
+    renderBlogManagerTable();
+    refreshIcons();
+    showToast('Dispatch was permanently deleted from publication.', 'info');
+  }
+
+  async function handleCreateOrUpdateStory(e) {
     e.preventDefault();
 
+    const editId = el.editPostId ? el.editPostId.value.trim() : '';
     const title = document.getElementById('newPostTitle').value.trim();
     const category = document.getElementById('newPostCategory').value;
-    const coverImage = el.newPostCover.value.trim() || PRESET_COVERS[0];
+    const coverImage = (el.newPostCover ? el.newPostCover.value.trim() : '') || PRESET_COVERS[0];
     const rawTags = document.getElementById('newPostTags').value.trim();
     const excerpt = document.getElementById('newPostExcerpt').value.trim();
     const content = document.getElementById('newPostContent').value.trim();
 
-    if (!title || !excerpt || !content) {
-      showToast('Please fill in all required fields.', 'error');
+    if (!title || !content) {
+      showToast('Please fill in title and content.', 'error');
       return;
     }
 
-    const tags = rawTags ? rawTags.split(',').map(t => t.trim()).filter(Boolean) : [category];
-    const wordCount = content.split(/\s+/).length;
+    const tags = rawTags ? rawTags.split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean) : [category];
+    const wordCount = (title + ' ' + excerpt + ' ' + content).split(/\s+/).length;
     const readingTime = Math.max(1, Math.round(wordCount / 180));
 
-    // Format new post
-    const newArticle = {
-      id: 'post-' + Date.now(),
-      title: title,
-      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      excerpt: excerpt,
-      content: content.startsWith('<') ? content : `<p class="lead">${excerpt}</p><p>${content.replace(/\n\n/g, '</p><p>')}</p>`,
-      category: category,
-      coverImage: coverImage,
-      publishedAt: 'Today',
-      readingTime: readingTime,
-      featured: false,
-      trending: true,
-      likes: 1,
-      claps: 1,
-      author: {
-        name: (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.getUser()) ? ChronicleAuth.getUser().name : 'Contributing Author',
-        role: (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.getUser()) ? ChronicleAuth.getUser().role : 'Author',
-        avatar: (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.getUser()) ? ChronicleAuth.getUser().avatar : 'https://ui-avatars.com/api/?name=Author&background=c95123&color=fff',
-        bio: 'Explorer of web systems, modern patterns, and digital craft.'
-      },
-      tags: tags,
-      comments: []
+    const user = (typeof ChronicleAuth !== 'undefined' && ChronicleAuth.getUser()) || {
+      name: 'Sarah Jenkins',
+      role: 'Principal Systems Architect',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'
     };
 
-    // Prepend to articles and persist
-    articles.unshift(newArticle);
-    saveArticles();
+    let formattedContent = '';
+    if (excerpt) formattedContent += `<p class="lead">${excerpt}</p>`;
+    if (content.startsWith('<')) formattedContent += content;
+    else formattedContent += `<p>${content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
 
-    // Reset Form
-    el.writeStoryForm.reset();
+    let savedBlog = null;
+
+    if (typeof ChronicleAuth !== 'undefined') {
+      try {
+        const payload = {
+          title,
+          excerpt: excerpt || title,
+          content: formattedContent,
+          category,
+          coverImage,
+          tags: tags.length ? tags : [category]
+        };
+
+        const res = await ChronicleAuth.apiFetch(
+          editId ? '/blogs/' + encodeURIComponent(editId) : '/blogs',
+          {
+            method: editId ? 'PUT' : 'POST',
+            body: JSON.stringify(payload)
+          }
+        );
+        if (res && res.blog) savedBlog = res.blog;
+      } catch (err) {
+        console.warn('Backend API notification, falling back to local storage:', err.message);
+      }
+    }
+
+    if (editId) {
+      // Update existing article
+      const idx = articles.findIndex(a => a.id === editId);
+      if (idx !== -1) {
+        articles[idx] = savedBlog || {
+          ...articles[idx],
+          title,
+          excerpt: excerpt || title,
+          content: formattedContent,
+          category,
+          coverImage,
+          tags: tags.length ? tags : [category],
+          readingTime
+        };
+      }
+      showToast('Dispatch updated successfully! ✨', 'success');
+    } else {
+      // Create new article
+      const newPost = savedBlog || {
+        id: 'post-' + Date.now(),
+        title,
+        slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        excerpt: excerpt || title,
+        content: formattedContent,
+        category,
+        coverImage,
+        tags: tags.length ? tags : [category],
+        readingTime,
+        publishedAt: 'Just now',
+        likes: 0,
+        claps: 0,
+        featured: false,
+        trending: true,
+        author: {
+          name: user.name,
+          role: user.role,
+          avatar: user.avatar
+        },
+        comments: []
+      };
+      articles.unshift(newPost);
+      showToast('Your dispatch was published live! 🎉', 'success');
+    }
+
+    saveArticles();
+    if (el.writeStoryForm) el.writeStoryForm.reset();
     closeWriteModal();
 
-    // Re-render
+    // Re-render views
     renderHero();
+    renderCategories();
+    renderTagsRail();
     renderArticles();
     renderTrendingWidget();
-
-    showToast('Your dispatch was published live! 🎉', 'success');
-
-    // Automatically open in reader
-    setTimeout(() => {
-      openArticleReader(newArticle.id);
-    }, 400);
+    refreshIcons();
   }
 
   // ============================================================
@@ -1388,7 +1857,53 @@
       });
     }
     if (el.randomCoverBtn) el.randomCoverBtn.addEventListener('click', pickPresetCover);
-    if (el.writeStoryForm) el.writeStoryForm.addEventListener('submit', handleCreateStory);
+    if (el.writeStoryForm) el.writeStoryForm.addEventListener('submit', handleCreateOrUpdateStory);
+
+    // Live word count & reading time calculation in write modal
+    ['newPostTitle', 'newPostExcerpt', 'newPostContent'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input) input.addEventListener('input', updateWriteStats);
+    });
+
+    // Delete confirmation modal listeners
+    if (el.cancelDeleteBtn) el.cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    if (el.confirmDeleteBtn) el.confirmDeleteBtn.addEventListener('click', confirmDeleteArticle);
+    if (el.deleteConfirmModal) {
+      el.deleteConfirmModal.addEventListener('click', (e) => {
+        if (e.target === el.deleteConfirmModal) closeDeleteModal();
+      });
+    }
+
+    // Quick compose buttons in feed & manager table
+    if (el.feedComposeBtn) el.feedComposeBtn.addEventListener('click', openWriteModal);
+    if (el.managerNewPostBtn) el.managerNewPostBtn.addEventListener('click', openWriteModal);
+
+    // Header Search Input (synced with Feed Search)
+    if (el.headerSearchInput) {
+      el.headerSearchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value;
+        if (el.feedSearchInput) el.feedSearchInput.value = e.target.value;
+        if (el.clearFeedSearchBtn) {
+          el.clearFeedSearchBtn.classList.toggle('hidden', !currentSearchQuery);
+        }
+        renderArticles();
+      });
+
+      el.headerSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const storiesEl = document.getElementById('stories');
+          if (storiesEl) storiesEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    }
+
+    // Read Time Filter
+    if (el.readTimeFilter) {
+      el.readTimeFilter.addEventListener('change', (e) => {
+        currentReadingTime = e.target.value;
+        renderArticles();
+      });
+    }
 
     // Reader View
     if (el.closeReaderBtn) el.closeReaderBtn.addEventListener('click', closeArticleReader);
@@ -1426,32 +1941,80 @@
       });
     }
 
-    if (el.viewGridBtn && el.viewListBtn) {
+    function updateViewModeButtons() {
+      const activeClass = 'p-1.5 rounded-md bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs transition-colors cursor-pointer';
+      const inactiveClass = 'p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer';
+      if (el.viewGridBtn) el.viewGridBtn.className = viewMode === 'grid' ? activeClass : inactiveClass;
+      if (el.viewListBtn) el.viewListBtn.className = viewMode === 'list' ? activeClass : inactiveClass;
+      if (el.viewManageBtn) el.viewManageBtn.className = viewMode === 'manage' ? activeClass : inactiveClass;
+    }
+
+    if (el.viewGridBtn) {
       el.viewGridBtn.addEventListener('click', () => {
         viewMode = 'grid';
-        el.viewGridBtn.className = 'p-1.5 rounded-md bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs transition-colors';
-        el.viewListBtn.className = 'p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors';
+        updateViewModeButtons();
         renderArticles();
       });
+    }
 
+    if (el.viewListBtn) {
       el.viewListBtn.addEventListener('click', () => {
         viewMode = 'list';
-        el.viewListBtn.className = 'p-1.5 rounded-md bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs transition-colors';
-        el.viewGridBtn.className = 'p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors';
+        updateViewModeButtons();
         renderArticles();
       });
     }
 
-    // Reset Filters in empty state
-    if (el.resetFiltersBtn) {
-      el.resetFiltersBtn.addEventListener('click', () => {
-        currentCategory = 'All Stories';
-        currentSort = 'latest';
-        if (el.sortSelect) el.sortSelect.value = 'latest';
-        renderCategories();
+    if (el.viewManageBtn) {
+      el.viewManageBtn.addEventListener('click', () => {
+        viewMode = 'manage';
+        updateViewModeButtons();
         renderArticles();
       });
     }
+
+    // Inline Feed Search listener
+    if (el.feedSearchInput) {
+      el.feedSearchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value;
+        if (el.headerSearchInput) el.headerSearchInput.value = e.target.value;
+        if (el.clearFeedSearchBtn) {
+          el.clearFeedSearchBtn.classList.toggle('hidden', !currentSearchQuery);
+        }
+        renderArticles();
+      });
+    }
+
+    if (el.clearFeedSearchBtn) {
+      el.clearFeedSearchBtn.addEventListener('click', () => {
+        currentSearchQuery = '';
+        if (el.feedSearchInput) el.feedSearchInput.value = '';
+        if (el.headerSearchInput) el.headerSearchInput.value = '';
+        el.clearFeedSearchBtn.classList.add('hidden');
+        renderArticles();
+        if (el.feedSearchInput) el.feedSearchInput.focus();
+      });
+    }
+
+    function resetAllFilters() {
+      currentCategory = 'All Stories';
+      currentTag = 'All';
+      currentReadingTime = 'all';
+      currentSearchQuery = '';
+      currentSort = 'latest';
+      if (el.feedSearchInput) el.feedSearchInput.value = '';
+      if (el.headerSearchInput) el.headerSearchInput.value = '';
+      if (el.clearFeedSearchBtn) el.clearFeedSearchBtn.classList.add('hidden');
+      if (el.sortSelect) el.sortSelect.value = 'latest';
+      if (el.readTimeFilter) el.readTimeFilter.value = 'all';
+      renderCategories();
+      renderTagsRail();
+      renderArticles();
+    }
+
+    // Reset Filters in empty state and summary bar
+    if (el.resetFiltersBtn) el.resetFiltersBtn.addEventListener('click', resetAllFilters);
+    if (el.clearAllFiltersBtn) el.clearAllFiltersBtn.addEventListener('click', resetAllFilters);
 
     // Load More Simulation
     if (el.loadMoreBtn) {
