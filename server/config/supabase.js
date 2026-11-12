@@ -1,11 +1,31 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-// Prefer the server-only service_role key (works with RLS enabled, keeps password hashes private).
-// Falls back to the publishable key, which only works if you add RLS policies for the anon role.
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Validate required environment variables
+if (!SUPABASE_URL) {
+    throw new Error('[SUPABASE] Missing SUPABASE_URL environment variable.');
+}
+
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('[SUPABASE] Missing SUPABASE_SERVICE_ROLE_KEY environment variable.');
+}
+
+// Initialize server-side Supabase client
 const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+            detectSessionInUrl: false
+        }
+    }
 );
+
+console.log('[SUPABASE] Server-side database client initialized.');
 
 module.exports = supabase;
